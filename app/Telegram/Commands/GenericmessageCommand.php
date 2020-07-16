@@ -129,7 +129,7 @@ class GenericmessageCommand extends SystemCommand
         }
         foreach ($main_menu_items as $menu_item) {
             if ($text == $prefix . $menu_item->title . $postfix) {
-
+                $this->closeConvers($message,$chat_id);
 
                 $subMenu = new GetMenuButtonMessage($menu_item->parent_id);
                 $keyboard = $subMenu->get_parentmenu($chat_id);
@@ -165,7 +165,8 @@ class GenericmessageCommand extends SystemCommand
 //            $lang_menu->create_inline_menu();
 //        }
         /**
-         * НАЖАТА КНОПКА ВАША ДАТА
+         * НАЖАТА КНОПКА ВАША ДАТА||СЕГОДНЯ||ЗАВТРА||ВЧЕРА
+         *
          */
 
         $notes = [];
@@ -228,20 +229,35 @@ class GenericmessageCommand extends SystemCommand
 
                     $errorMessage = "";
                     $year = date("Y");
-                    if ($date_array[1] < date("m")) {
-//                     $errorMessage="TRANSLATE OUTDATED";
-                        $year++;
-                    } elseif ($date_array[1] == date("m")) {
-                        if ($date_array[0] < date("d") - 1) {
-//                         $errorMessage="TRANSLATE OUTDATED";
-                            $year++;
+
+                    if (count($date_array) !== 2) {
+                        $errorMessage="SMTH WRONG (TRANSLATE)";
+
+                    }else{
+                        if(!is_numeric($date_array[0])&&!is_numeric($date_array[1])) {
+                            $errorMessage="SMTH WRONG (TRANSLATE)";
                         }
                     }
-                    $date = "$year-$date_array[1]-$date_array[0]";
 
-                    // dd($conversModel);
+                    if(!$errorMessage) {
+                        if ($date_array[1] < date("m")) {
+//                     $errorMessage="TRANSLATE OUTDATED";
+                            $year++;
+                        } elseif ($date_array[1] == date("m")) {
+                            if ($date_array[0] < date("d") - 1) {
+//                         $errorMessage="TRANSLATE OUTDATED";
+                                $year++;
+                            }
+                        }
+                        $date = "$year-$date_array[1]-$date_array[0]";
+
+                        // dd($conversModel);
+
+                    }else {
+                        $data["text"] = $errorMessage;
+                        Request::sendMessage($data);
+                    }
                     $newconversModel->save();
-
 
                 }
             }
@@ -250,18 +266,16 @@ class GenericmessageCommand extends SystemCommand
             $api = GetApi::getFlightsByDate($date, "1");
             if ($api) {
                 $keyboard=new CreateInlineKeyboard($chat_id);
-                $data["text"] = \GuzzleHttp\json_encode($api);
-
+                $keyboard= $keyboard->createFlightsList($api);
+                $data["text"] = $date."\nPAGE $api->current_page from $api->last_page";
+                $data["reply_markup"] = $keyboard;
                 Request::sendMessage($data);
-            } else {
-                $data["text"] = "TRANSLATE ERROR";
+            }else {
+                $data["text"] = "OOPS WRONG DATA";
+
                 Request::sendMessage($data);
             }
-
         }
-//        dd(G);
-
-
         /**
          *
          *
@@ -345,7 +359,12 @@ class GenericmessageCommand extends SystemCommand
 
 
     }
+    public function closeConvers($message,$chat_id){
+    Convers::where('user_id', $message->getFrom()->getId())
+            ->where('chat_id', $chat_id)
+           ->delete();
 
+    }
     public function getTitle($button)
     {
         $item = MenuItem::where('id', telegram_config_no_translate($button))->
