@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="0a7db450-fb7b-4961-bfac-acc6c3aeffd1" name="windrosebot" url="http://91.235.128.192">
+        <fileTransfer rootFolder="/www/windrosebot.dimafilipenko.website" accessType="FTPS" host="91.235.128.192" port="21">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
