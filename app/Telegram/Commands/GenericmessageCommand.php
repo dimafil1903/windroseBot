@@ -16,6 +16,7 @@ use App\Http\Controllers\SendMessage;
 use App\MenuItem;
 
 
+use App\Telegram\Helpers\ConvertDate;
 use App\Telegram\Helpers\GetApi;
 use App\Telegram\keyboards\CreateInlineKeyboard;
 use App\Telegram\keyboards\LangInlineKeyboard;
@@ -23,6 +24,7 @@ use App\Telegram\keyboards\MailInlineKeyboard;
 
 use App\Http\Controllers\FlightsByDateController;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\Lang;
 use Longman\TelegramBot\Commands\SystemCommand;
 use Longman\TelegramBot\Conversation;
 use Longman\TelegramBot\Request;
@@ -201,7 +203,8 @@ class GenericmessageCommand extends SystemCommand
             $notes['state'] = 0;
             $convers->update();
 
-            $data['text'] = 'Введите дату на которую вы хотите просмотерть рейсы';
+            $data['text'] = Lang::get("messages.inputYourDate",[],"$chat->lang")."\n".
+                Lang::get("messages.example",[],"$chat->lang");
 
 
             Request::sendMessage($data);
@@ -231,11 +234,11 @@ class GenericmessageCommand extends SystemCommand
                     $year = date("Y");
 
                     if (count($date_array) !== 2) {
-                        $errorMessage="SMTH WRONG (TRANSLATE)";
+                        $errorMessage=Lang::get("messages.wrongDateInput",[],"$chat->lang");
 
                     }else{
                         if(!is_numeric($date_array[0])&&!is_numeric($date_array[1])) {
-                            $errorMessage="SMTH WRONG (TRANSLATE)";
+                            $errorMessage=Lang::get("messages.wrongDateInput",[],"$chat->lang");
                         }
                     }
 
@@ -267,11 +270,11 @@ class GenericmessageCommand extends SystemCommand
             if ($api) {
                 $keyboard=new CreateInlineKeyboard($chat_id);
                 $keyboard= $keyboard->createFlightsList($api);
-                $data["text"] = $date."\nPAGE $api->current_page from $api->last_page";
+                $data["text"] = ConvertDate::ConvertToWordMonth($date,$chat->lang)."\n".Lang::get("messages.list",[],"$chat->lang")." $api->current_page ".Lang::get("messages.of",[],"$chat->lang")." $api->last_page";
                 $data["reply_markup"] = $keyboard;
                 Request::sendMessage($data);
             }else {
-                $data["text"] = "OOPS WRONG DATA";
+                $data["text"] =     $errorMessage=Lang::get("messages.wrongDateInput",[],"$chat->lang");
 
                 Request::sendMessage($data);
             }

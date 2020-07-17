@@ -27,7 +27,7 @@ class LangInlineKeyboard
     public function create_inline_menu(){
         try {
             $inline_keyboard = new InlineKeyboard([[
-                ['text' => '🇷🇺  ', 'callback_data' => 'lang_ru'],
+//                ['text' => '🇷🇺  ', 'callback_data' => 'lang_ru'],
                 ['text' => '🇺🇦', 'callback_data' => 'lang_uk'],
                 ['text' => '🇬🇧', 'callback_data' => 'lang_en'],
             ]]);
@@ -35,7 +35,7 @@ class LangInlineKeyboard
             Log::error('Something is really going wrong.');
 
         }
-        $choose_lang_text='Выберите язык / Оберіть мову / choose language';
+        $choose_lang_text='Оберіть мову / choose language';
         $data = [
             'chat_id' => $this->chat_id,
             'text'    => $choose_lang_text,

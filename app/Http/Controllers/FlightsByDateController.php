@@ -51,6 +51,7 @@ class FlightsByDateController extends Controller
             $fleets = collect($data->fleets);
 
             $returnData = new Collection();
+
             foreach ($flights as $flight) {
 //
                 $item = collect($flight);
@@ -61,12 +62,14 @@ class FlightsByDateController extends Controller
 //               $this->getTime($item['departure_date']);
 //               dd($item);
             }
+            $date=$data->date;
             $lastPage = ceil($returnData->count() / 10);
             $All_INFO = new Collection();
             if ($current_page > $lastPage) {
                 $current_page = $lastPage;
             }
             $All_INFO->put("last_page", $lastPage);
+            $All_INFO->put("date", $date);
             $All_INFO->put("current_page", $current_page);
             $returnData = $returnData->forPage($current_page, 10);
             $All_INFO->put("data", $returnData);
