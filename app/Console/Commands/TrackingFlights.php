@@ -1,0 +1,78 @@
+<?php
+
+namespace App\Console\Commands;
+
+use App\FlightTracking;
+use App\Telegram\Helpers\GetApi;
+use App\User;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Longman\TelegramBot\Exception\TelegramException;
+use Longman\TelegramBot\Request;
+use PhpTelegramBot\Laravel\PhpTelegramBotContract;
+
+class TrackingFlights extends Command
+{
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'track:dayBeforeFlight';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'tracking flight ';
+
+    /**
+     * Create a new command instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    /**
+     * Execute the console command.
+     *
+     * @param PhpTelegramBotContract $telegram_bot
+     * @return void
+     * @throws TelegramException
+     */
+    public function handle(PhpTelegramBotContract $telegram_bot)
+    {
+        $tracksWithDelay = FlightTracking::where("date", date("Y-m-d "))->where("status", 1)->get();
+        foreach ($tracksWithDelay as $item) {
+            $flight = GetApi::getOneFlight($item->date, $item->page, $item->flight_number);
+            if ($flight->delay !== "0") {
+                if ($item->delay !== $flight->delay) {
+
+                    var_dump($flight);
+                    $this->info("$item->date");
+                    $data = [
+                        "chat_id" => $item->chat_id,
+
+                        "text" => "$flight->flight_number BRO tam delay=" . gmdate("H:i", (int)$flight->delay)
+
+                    ];
+                    Request::sendMessage($data);
+
+                    $flightUpdate = FlightTracking::find($item->id);
+                    $flightUpdate->delay = $flight->delay;
+                    $flightUpdate->delay_send++;
+                    $flightUpdate->save();
+                }
+            }
+        }
+//        $this->info("IM Start");
+        Log::info("IM START log");
+    }
+}

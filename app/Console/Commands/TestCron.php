@@ -36,6 +36,7 @@ class TestCron extends Command
     /**
      * Execute the console command.
      *
+     * @param PhpTelegramBotContract $telegram_bot
      * @return mixed
      */
     public function handle(PhpTelegramBotContract  $telegram_bot)

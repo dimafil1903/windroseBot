@@ -31,11 +31,16 @@ class FlightsByDateController extends Controller
         if ($request['page']) {
             $current_page = $request['page'];
         }
-        $data = $this->getApiData("https://eapi.windrose.kiev.ua/windrose/website/schedule/?date=" . $request['date']);
-        if (!$data) {
-            return response($data, 404);
+        $data = ($this->getApiData("https://eapi.windrose.kiev.ua/windrose/website/schedule/?date=" . $request['date']));
+
+//        dd($data->code);
+
+        if ($data->code==400) {
+            return response(\GuzzleHttp\json_encode($data), 404);
         }
-        if ($data->status == "success") {
+
+        if ($data->code == 0) {
+
             /**
              * МАССИВ АЕРОПОРТОВ
              */
@@ -111,7 +116,7 @@ class FlightsByDateController extends Controller
      *
      * Get Api Data from any request
      * @param string $request request
-     * @return bool
+     * @return array
      */
 
     public function getApiData($request)
@@ -120,19 +125,21 @@ class FlightsByDateController extends Controller
         $client = new Client();
         try {
             $response = $client->get($request);
-            $statusCode = $response->getStatusCode();
-            $body = $response->getBody()->getContents();
-            return \GuzzleHttp\json_decode($body);
+           $body= $response->getBody();
+            return  \GuzzleHttp\json_decode($body);
         } catch (GuzzleException $exception) {
 //           Log::error( $exception);
-            var_dump($exception->getMessage());
-            return false;
+//            var_dump( $exception->getFile());
+
+            return  (object) [
+                "status"=>"error",
+                "code"=>$exception->getCode()];
         }
     }
     /**
      * Store a newly created resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return Response
      */
 

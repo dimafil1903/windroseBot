@@ -5,6 +5,8 @@ namespace App\Telegram\keyboards;
 
 
 use App\Chat;
+use App\FlightTracking;
+use App\Telegram\Helpers\FlightHelper;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use Longman\TelegramBot\Entities\InlineKeyboard;
@@ -41,13 +43,13 @@ class CreateInlineKeyboard
                     $datum->flight_number . " " .
                     $from[$lang] . "-" .
                     $to[$lang],
-                    'callback_data' => "flight_$datum->flight_number"."_$date" . "_$current_page"]]);
+                    'callback_data' => "flight_$datum->flight_number" . "_$date" . "_$current_page"]]);
         }
 
 
         $miniArray = [
-            ['text' => "⬅️ ".Lang::get("messages.back",[],"$chat->lang"), 'callback_data' => "flightsPage_$date" . "_$prev"],
-            ['text' => Lang::get("messages.next",[],"$chat->lang")." ➡️", 'callback_data' => "flightsPage_$date" . "_$next"]
+            ['text' => "⬅️ " . Lang::get("messages.back", [], "$chat->lang"), 'callback_data' => "flightsPage_$date" . "_$prev"],
+            ['text' => Lang::get("messages.next", [], "$chat->lang") . " ➡️", 'callback_data' => "flightsPage_$date" . "_$next"]
         ];
         array_push($array, $miniArray);
 //        dd($data->data);
@@ -59,16 +61,86 @@ class CreateInlineKeyboard
         }
         return $inline_keyboard;
     }
-    public function createCardButtons($flight,$page,$date){
+
+    public function createCardButtons($flight, $page, $date, $lang)
+    {
         try {
-            $inline_keyboard = new InlineKeyboard([
-                [['text' => "MONITOR", 'callback_data' => "monitor_$flight->flight_number"]],
-                [['text' => 'inline', 'switch_inline_query' => $flight->flight_number],],
-                [['text' => "GO BACK TO MENU", 'callback_data' => "backToFlightList_$date"."_$page"]]
-            ]);
-            return $inline_keyboard;
+            $flightInDB = FlightTracking::where('page', $page)
+                ->where("date", $date)
+                ->where("chat_id", $this->chat_id)
+                ->where("flight_number", $flight->flight_number)
+                ->first();
+            $isEnabled = "";
+            $track = Lang::get("messages.track", [], "$lang");
+            if ($flightInDB) {
+                if ($flightInDB->status == 0) {
+                    $status = 1;
+                } else {
+                    $isEnabled = "✅";
+                    $track = Lang::get("messages.tracking", [], "$lang");
+                    $status = 0;
+                }
+            } else {
+                $status = 1;
+            }
+
+            $keyboard = [];
+//            dd(FlightHelper::GetStatus($flight)->code);
+            if (FlightHelper::GetStatus($flight)->code!==2 && FlightHelper::GetStatus($flight)->code!==3 ) {
+                array_push($keyboard, [['text' => $track . " $isEnabled", 'callback_data' => "track_$date" . "_$page" . "_$flight->flight_number" . "_$status"]]);
+            }
+            array_push($keyboard, [['text' => Lang::get("messages.share", [], "$lang"), 'switch_inline_query' => $flight->flight_number]]);
+            array_push($keyboard, [['text' => Lang::get("messages.backToList", [], "$lang"), 'callback_data' => "backToFlightList_$date" . "_$page"]]);
+
+
+            return new InlineKeyboard($keyboard);
         } catch (TelegramException $e) {
         }
 
+    }
+
+    public function createMyFlightsList($data)
+    {
+        $chat = Chat::find($this->chat_id);
+        $array = [];
+
+
+//        $last_page=$data->last_page;
+//        $prev = $current_page - 1;
+//        $next = $current_page + 1;
+        foreach ($data as $datum) {
+//            dd($datum->fromJSON);
+            $datum->from = \GuzzleHttp\json_decode($datum->fromJSON);
+            $datum->to = \GuzzleHttp\json_decode($datum->toJSON);
+            $from = (array)\GuzzleHttp\json_decode($datum->fromJSON);
+            $to = (array)\GuzzleHttp\json_decode($datum->toJSON);
+            $lang = "en";
+            if ($chat->lang == "uk") {
+                $lang = "ua";
+            }
+
+            array_push($array,
+                [['text' =>
+                    $datum->carrier . "-" .
+                    $datum->flight_number . " " .
+                    $from["$lang"] . "-" .
+                    $to["$lang"],
+                    'callback_data' => "flight_$datum->flight_number" . "_$datum->date" . "_$datum->page"]]);
+        }
+
+
+//        $miniArray = [
+//            ['text' => "⬅️ ".Lang::get("messages.back",[],"$chat->lang"), 'callback_data' => "flightsPage_$date" . "_$prev"],
+//            ['text' => Lang::get("messages.next",[],"$chat->lang")." ➡️", 'callback_data' => "flightsPage_$date" . "_$next"]
+//        ];
+//        array_push($array, $miniArray);
+//        dd($data->data);
+        try {
+            $inline_keyboard = new InlineKeyboard($array);
+        } catch (TelegramException $e) {
+            Log::error('Something is really going wrong.');
+
+        }
+        return $inline_keyboard;
     }
 }

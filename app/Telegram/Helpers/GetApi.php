@@ -19,6 +19,12 @@ class GetApi
         $c = new FlightsByDateController;
         $request = env('APP_URL', null) . "/api/getFlightsByDate?date=$date&page=$page";
         $result = $c->getApiData($request);
+
+//        dd($result);
+//        if (isset($result->code)) {
+//            if ($result->code==404)
+//              return null;
+//        }
         return $result ? $result : false;
 
     }
@@ -32,8 +38,10 @@ class GetApi
     static function getOneFlight($date,$page,$number)
     {
       $data=  self::getFlightsByDate($date,$page);
-        $flights = new Collection($data->data);
-        return $flights->where("flight_number", $number)->first();
+      if ($data) {
+          $flights = new Collection($data->data);
+          return $flights->where("flight_number", $number)->first();
+      }
     }
 
     /**

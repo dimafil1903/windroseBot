@@ -12,6 +12,7 @@ namespace Longman\TelegramBot\Commands\SystemCommands;
 
 use App\Chat;
 
+use App\FlightTracking;
 use App\Http\Controllers\SendMessage;
 use App\MenuItem;
 
@@ -23,6 +24,7 @@ use App\Telegram\keyboards\LangInlineKeyboard;
 use App\Telegram\keyboards\MailInlineKeyboard;
 
 use App\Http\Controllers\FlightsByDateController;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Lang;
 use Longman\TelegramBot\Commands\SystemCommand;
@@ -131,7 +133,7 @@ class GenericmessageCommand extends SystemCommand
         }
         foreach ($main_menu_items as $menu_item) {
             if ($text == $prefix . $menu_item->title . $postfix) {
-                $this->closeConvers($message,$chat_id);
+                $this->closeConvers($message, $chat_id);
 
                 $subMenu = new GetMenuButtonMessage($menu_item->parent_id);
                 $keyboard = $subMenu->get_parentmenu($chat_id);
@@ -149,7 +151,33 @@ class GenericmessageCommand extends SystemCommand
         /**
          * Конец работы с Меню
          */
+        /**
+         * НАЖАТИЕ КНОПКИ МОЙ СПИСОК РЕЙСОВ
+         */
+        if ($text == $this->getTitle('buttons.myFlightList')) {
+          $usersTracksFlights=FlightTracking::where('chat_id',$chat_id)->where('person_id',$message->getFrom()->getId())->get();
 
+            if ($usersTracksFlights->isEmpty()){
+                $data=[
+                    "chat_id"=>$chat_id,
+                    "text"=>Lang::get("messages.emptyFlightsList", [], "$chat->lang"),
+                ];
+            }else{
+                $keyboard=new CreateInlineKeyboard($chat_id);
+                $keyboard=$keyboard->createMyFlightsList($usersTracksFlights);
+                $data=[
+                    "chat_id"=>$chat_id,
+                    "text"=>Lang::get("messages.FlightsListText", [], "$chat->lang"),
+                    "reply_markup"=>$keyboard
+                ];
+            }
+
+
+//          $data=['chat_id'=>$chat_id];
+//          $data["text"]="YOUR LIST";
+//          $data["reply_markup"]=$keyboard;
+          Request::sendMessage($data);
+        }
 
         /**
          * КНОПКА СМЕНЫ языка
@@ -203,8 +231,8 @@ class GenericmessageCommand extends SystemCommand
             $notes['state'] = 0;
             $convers->update();
 
-            $data['text'] = Lang::get("messages.inputYourDate",[],"$chat->lang")."\n".
-                Lang::get("messages.example",[],"$chat->lang");
+            $data['text'] = Lang::get("messages.inputYourDate", [], "$chat->lang") . "\n" .
+                Lang::get("messages.example", [], "$chat->lang");
 
 
             Request::sendMessage($data);
@@ -234,15 +262,15 @@ class GenericmessageCommand extends SystemCommand
                     $year = date("Y");
 
                     if (count($date_array) !== 2) {
-                        $errorMessage=Lang::get("messages.wrongDateInput",[],"$chat->lang");
+                        $errorMessage = Lang::get("messages.wrongDateInput", [], "$chat->lang");
 
-                    }else{
-                        if(!is_numeric($date_array[0])&&!is_numeric($date_array[1])) {
-                            $errorMessage=Lang::get("messages.wrongDateInput",[],"$chat->lang");
+                    } else {
+                        if (!is_numeric($date_array[0]) && !is_numeric($date_array[1])) {
+                            $errorMessage = Lang::get("messages.wrongDateInput", [], "$chat->lang");
                         }
                     }
 
-                    if(!$errorMessage) {
+                    if (!$errorMessage) {
                         if ($date_array[1] < date("m")) {
 //                     $errorMessage="TRANSLATE OUTDATED";
                             $year++;
@@ -256,9 +284,9 @@ class GenericmessageCommand extends SystemCommand
 
                         // dd($conversModel);
 
-                    }else {
+                    } else {
                         $data["text"] = $errorMessage;
-                        Request::sendMessage($data);
+                        return Request::sendMessage($data);
                     }
                     $newconversModel->save();
 
@@ -267,16 +295,23 @@ class GenericmessageCommand extends SystemCommand
         }
         if ($date) {
             $api = GetApi::getFlightsByDate($date, "1");
-            if ($api) {
-                $keyboard=new CreateInlineKeyboard($chat_id);
-                $keyboard= $keyboard->createFlightsList($api);
-                $data["text"] = ConvertDate::ConvertToWordMonth($date,$chat->lang)."\n".Lang::get("messages.list",[],"$chat->lang")." $api->current_page ".Lang::get("messages.of",[],"$chat->lang")." $api->last_page";
-                $data["reply_markup"] = $keyboard;
-                Request::sendMessage($data);
-            }else {
-                $data["text"] =     $errorMessage=Lang::get("messages.wrongDateInput",[],"$chat->lang");
+            if (isset($api->code)) {
+                if ($api->code == 404) {
 
-                Request::sendMessage($data);
+                    $data["text"] = $errorMessage = Lang::get("messages.NoFlightsOnThisDate", [], "$chat->lang");
+                    return Request::sendMessage($data);
+                }
+            }
+            if ($api) {
+                $keyboard = new CreateInlineKeyboard($chat_id);
+                $keyboard = $keyboard->createFlightsList($api);
+                $data["text"] = ConvertDate::ConvertToWordMonth($date, $chat->lang) . "\n" . Lang::get("messages.list", [], "$chat->lang") . " $api->current_page " . Lang::get("messages.of", [], "$chat->lang") . " $api->last_page";
+                $data["reply_markup"] = $keyboard;
+                return Request::sendMessage($data);
+            } else {
+                $data["text"] = $errorMessage = Lang::get("messages.wrongDateInput", [], "$chat->lang");
+
+                return Request::sendMessage($data);
             }
         }
         /**
@@ -362,12 +397,15 @@ class GenericmessageCommand extends SystemCommand
 
 
     }
-    public function closeConvers($message,$chat_id){
-    Convers::where('user_id', $message->getFrom()->getId())
+
+    public function closeConvers($message, $chat_id)
+    {
+        Convers::where('user_id', $message->getFrom()->getId())
             ->where('chat_id', $chat_id)
-           ->delete();
+            ->delete();
 
     }
+
     public function getTitle($button)
     {
         $item = MenuItem::where('id', telegram_config_no_translate($button))->

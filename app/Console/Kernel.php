@@ -5,9 +5,9 @@ namespace App\Console;
 use App\Chat;
 use App\CheckedByUser;
 use App\Console\Commands\MakeUser;
+use App\Console\Commands\TrackingFlights;
 use App\DistributionType;
-use App\ShopProduct;
-use App\Telegram\keyboards\NewProductsInlineKeyboard;
+
 use App\TelegramDistribution;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -23,7 +23,8 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         Commands\TestCron::class,
-        MakeUser::class
+        MakeUser::class,
+        TrackingFlights::class
     ];
     public $distribution;
 
@@ -36,6 +37,7 @@ class Kernel extends ConsoleKernel
      */
     public function schedule(Schedule $schedule)
     {
+        $schedule->command('track:dayBeforeFlight')->everyTenMinutes();
 //         $schedule->command('test:cron')->
 
 

@@ -12,6 +12,7 @@ namespace Longman\TelegramBot\Commands\SystemCommands;
 
 use App\CheckedByUser;
 use App\DistributionType;
+use App\FlightTracking;
 use App\MenuItem;
 use App\ShopCategory;
 use App\ShopProduct;
@@ -64,7 +65,8 @@ class CallbackqueryCommand extends SystemCommand
     /**
      * Command execute method
      *
-     * @return void
+     * @return ServerResponse
+     * @throws \Longman\TelegramBot\Exception\TelegramException
      */
     public function execute()
     {
@@ -98,14 +100,29 @@ class CallbackqueryCommand extends SystemCommand
         /**
          * Пагинация для списка рейсов
          */
+        $data['chat_id'] = $chat_id;
         $flightsList = new CreateInlineKeyboard($chat_id);
-        if ($callbackPiece[0] == 'flightsPage' || $callbackPiece[0]=="backToFlightList") {
-            $date="";
-            $page=1;
+        if ($callbackPiece[0] == 'flightsPage' || $callbackPiece[0] == "backToFlightList") {
+            $date = "";
+            $page = 1;
             if (isset($callbackPiece[1])) $date = $callbackPiece[1];
             if (isset($callbackPiece[2])) $page = $callbackPiece[2];
 
             $fligtsData = GetApi::getFlightsByDate($date, $page);
+            if (isset($fligtsData->code)) {
+                if ($fligtsData->code == 404) {
+                    $data = [
+                        "chat_id" => $chat_id,
+                        "message_id" => $callback_message_id
+                    ];
+//                    $data['chat_id']=$chat_id;
+//                    $data["message_id"] = $callback_message_id;
+
+                    $answer_text = Lang::get("messages.NoFlightsOnThisDate", [], "$chat->lang");
+                    $this->returnAnswerText($callback_query_id, $answer_text . $callback_message_id);
+                    return Request::deleteMessage($data);
+                }
+            }
             $keyboard = $flightsList->createFlightsList($fligtsData);
             $data = array(
                 "chat_id" => $chat_id,
@@ -113,17 +130,17 @@ class CallbackqueryCommand extends SystemCommand
                 "reply_markup" => $keyboard,
             );
             if (isset($fligtsData->current_page) && isset($fligtsData->last_page)) {
-                $answer_text=Lang::get("messages.list",[],"$chat->lang")." $fligtsData->current_page ".Lang::get("messages.of",[],"$chat->lang")." $fligtsData->last_page";
+                $answer_text = Lang::get("messages.list", [], "$chat->lang") . " $fligtsData->current_page " . Lang::get("messages.of", [], "$chat->lang") . " $fligtsData->last_page";
 
-                $data["text"] = ConvertDate::ConvertToWordMonth($date,$chat->lang)."\n".$answer_text;
+                $data["text"] = ConvertDate::ConvertToWordMonth($date, $chat->lang) . "\n" . $answer_text;
 
             }
 
 
             if ($page < 1) {
-                $answer_text = Lang::get("messages.YouAlreadyAtStart",[],"$chat->lang");
+                $answer_text = Lang::get("messages.YouAlreadyAtStart", [], "$chat->lang");
             } elseif ($page > $fligtsData->last_page) {
-                $answer_text = Lang::get("messages.listIsOver",[],"$chat->lang");
+                $answer_text = Lang::get("messages.listIsOver", [], "$chat->lang");
             }
 
             Request::editMessageReplyMarkup($data);
@@ -134,17 +151,67 @@ class CallbackqueryCommand extends SystemCommand
             $page = $callbackPiece[3];
             $answer_text = $callback_data;
             $fligtsData = GetApi::getFlightsByDate($date, $page);
+            if (isset($fligtsData->code)) {
+                if ($fligtsData->code == 404) {
+
+                    $data = [
+                        "chat_id" => $chat_id,
+                        "message_id" => $callback_message_id
+                    ];
+                    $answer_text = Lang::get("messages.NoFlightsOnThisDate", [], "$chat->lang");
+                    $this->returnAnswerText($callback_query_id, $answer_text);
+                    return Request::deleteMessage($data);
+                }
+            }
             if (isset($fligtsData->data)) {
                 $flights = new Collection($fligtsData->data);
                 $flight = $flights->where("flight_number", $number)->first();
                 $data = array(
                     "chat_id" => $chat_id,
-                    'message_id'=>$callback_message_id,
-                    "text"=>GetMessageFromData::generateCard($flight,$chat->lang),
-                    "reply_markup"=>$flightsList->createCardButtons($flight,$page,$date)
+                    'message_id' => $callback_message_id,
+                    "text" => GetMessageFromData::generateCard($flight, $chat->lang),
+                    "reply_markup" => $flightsList->createCardButtons($flight, $page, $date, $chat->lang)
                 );
-                Request::editMessageText($data);
+                 Request::editMessageReplyMarkup($data);
+                 Request::editMessageText($data);
             }
+        }
+        if ($callbackPiece[0] == 'track') {
+            $date = $callbackPiece[1];
+            $page = $callbackPiece[2];
+            $flight_number = $callbackPiece[3];
+            $status = $callbackPiece[4];
+            $flight = GetApi::getOneFlight($date, $page, $flight_number);
+//            dd($flight);
+
+
+            $createFlightTracking = FlightTracking::updateOrCreate([
+                "date" => $date,
+                "page" => $page,
+                "chat_id" => $chat_id,
+                "person_id" => $callback_query->getFrom()->getId(),
+                "flight_number" => $flight_number,
+                'carrier'=>$flight->carrier,
+            ],
+                [
+                    "fromJSON"=>\GuzzleHttp\json_encode($flight->from),
+                    "toJSON"=>\GuzzleHttp\json_encode($flight->to),
+                    "status" => $status,
+
+                    "departure_date" => $flight->departure_date,
+                    "arrival_date" => $flight->arrival_date,
+                ]);
+
+            $data = array(
+                "chat_id" => $chat_id,
+                'message_id' => $callback_message_id,
+                "text" => GetMessageFromData::generateCard($flight, $chat->lang),
+                "reply_markup" => $flightsList->createCardButtons($flight, $page, $date, $chat->lang)
+            );
+            Request::editMessageReplyMarkup($data);
+            Request::editMessageText($data);
+//            dd($creteFlightTracking->wasRecentlyCreated);
+//            dd($createFlightTracking);
         }
 
         /**
@@ -195,5 +262,16 @@ class CallbackqueryCommand extends SystemCommand
             Request::answerCallbackQuery($data);
         }
 
+    }
+
+    public function returnAnswerText($callback_query_id, $answer_text, $callback_data = 'thumb up')
+    {
+        $data = [
+            'callback_query_id' => $callback_query_id,
+            'text' => $answer_text,
+            'show_alert' => $callback_data,
+            'cache_time' => 1,
+        ];
+        Request::answerCallbackQuery($data);
     }
 }
