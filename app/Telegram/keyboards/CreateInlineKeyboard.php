@@ -62,7 +62,7 @@ class CreateInlineKeyboard
         return $inline_keyboard;
     }
 
-    public function createCardButtons($flight, $page, $date, $lang)
+    public function createCardButtons($flight, $page, $date, $lang, $type = "list")
     {
         try {
             $flightInDB = FlightTracking::where('page', $page)
@@ -86,12 +86,16 @@ class CreateInlineKeyboard
 
             $keyboard = [];
 //            dd(FlightHelper::GetStatus($flight)->code);
-            if (FlightHelper::GetStatus($flight)->code!==2 && FlightHelper::GetStatus($flight)->code!==3 ) {
+            if (FlightHelper::GetStatus($flight, $lang)->code !== 2 && FlightHelper::GetStatus($flight, $lang)->code !== 3) {
                 array_push($keyboard, [['text' => $track . " $isEnabled", 'callback_data' => "track_$date" . "_$page" . "_$flight->flight_number" . "_$status"]]);
             }
-            array_push($keyboard, [['text' => Lang::get("messages.share", [], "$lang"), 'switch_inline_query' => $flight->flight_number]]);
-            array_push($keyboard, [['text' => Lang::get("messages.backToList", [], "$lang"), 'callback_data' => "backToFlightList_$date" . "_$page"]]);
+            array_push($keyboard, [['text' => Lang::get("messages.share", [], "$lang"), 'switch_inline_query' => "$flight->carrier-$flight->flight_number $date"]]);
+            if ($type == "list") {
+                array_push($keyboard, [['text' => Lang::get("messages.backToList", [], "$lang"), 'callback_data' => "backToFlightList_$date" . "_$page"]]);
+            }else if ($type=="myList"){
+                array_push($keyboard, [['text' => Lang::get("messages.backToList", [], "$lang"), 'callback_data' => "backToMyFlightList"]]);
 
+            }
 
             return new InlineKeyboard($keyboard);
         } catch (TelegramException $e) {
@@ -125,7 +129,7 @@ class CreateInlineKeyboard
                     $datum->flight_number . " " .
                     $from["$lang"] . "-" .
                     $to["$lang"],
-                    'callback_data' => "flight_$datum->flight_number" . "_$datum->date" . "_$datum->page"]]);
+                    'callback_data' => "flight_$datum->flight_number" . "_$datum->date" . "_$datum->page"."_myList"]]);
         }
 
 

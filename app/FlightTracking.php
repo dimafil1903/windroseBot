@@ -25,6 +25,8 @@ class FlightTracking extends Model
         'carrier',
         'fromJSON',
         'toJSON',
-        'delay'
+        'delay',
+        'expired_at',
+
     ];
 }

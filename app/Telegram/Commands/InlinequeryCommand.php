@@ -10,10 +10,16 @@
 
 namespace Longman\TelegramBot\Commands\SystemCommands;
 
+use App\Chat;
+use App\Telegram\Helpers\GetApi;
+use App\Telegram\Helpers\GetMessageFromData;
+use Illuminate\Support\Facades\Lang;
 use Longman\TelegramBot\Commands\SystemCommand;
 use Longman\TelegramBot\Entities\InlineKeyboard;
 use Longman\TelegramBot\Entities\InlineQuery\InlineQueryResultArticle;
 use Longman\TelegramBot\Entities\InputMessageContent\InputTextMessageContent;
+use Longman\TelegramBot\Entities\ServerResponse;
+use Longman\TelegramBot\Exception\TelegramException;
 use Longman\TelegramBot\Request;
 
 /**
@@ -41,37 +47,67 @@ class InlinequeryCommand extends SystemCommand
     /**
      * Command execute method
      *
-     * @return \Longman\TelegramBot\Entities\ServerResponse
-     * @throws \Longman\TelegramBot\Exception\TelegramException
+     * @return void
+     * @throws TelegramException
      */
     public function execute()
     {
         $inline_query = $this->getInlineQuery();
         $query = $inline_query->getQuery();
-
+//        dd($inline_query->getOffset());
         $data = ['inline_query_id' => $inline_query->getId()];
         $results = [];
-
-        $array=[];
+        $queryPiece = explode(" ", $query);
+        $date = "";
+        $flightNumber = "";
+        if (isset($queryPiece)) {
+            $date = $queryPiece[1];
+        }
+        if (isset($queryPiece)) {
+            $flightNumber = $queryPiece[0];
+        }
+        $flightNumber = explode("-", $flightNumber);
+        $flightNumberWithoutCarrier = $flightNumber[1];
+//        dd($date,$flightNumberWithoutCarrier);
+        $flight = GetApi::getOneFlight($date, $flightNumberWithoutCarrier);
+//        dd($flight);
+//        dd($flight);
+        if (isset($flight->code))
+            if ($flight->code == 404) {
+                dd($flight);
+            }
+        $array = [];
         $miniArray = [
             ['text' => "Отслеживать вместе со мной", 'url' => "t.me/windroseHelpBot?start="],
         ];
+        $chat = Chat::find($inline_query->getFrom()->getId());
+        $langAPI = $lang = $chat->lang;
         array_push($array, $miniArray);
+        $from = (array)$flight->from;
+        $to = (array)$flight->to;
+
+        //$langAPI = $lang;
+        if ($lang == "uk") $langAPI = "ua";
+
+
         $inline_keyboard = new InlineKeyboard($array);
         if ($query !== '') {
             $articles = [
                 [
-                    'type'=>'article',
+                    'type' => 'article',
                     'id' => '001',
-                    'title' => 'TITLE',
-                    'description' => 'you enter: ' . $query,
-                    'reply_markup'=>$inline_keyboard,
+                    'title' => $flight->carrier . "-" .
+                        $flight->flight_number . " " .
+                        $from[$langAPI] . "-" .
+                        $to[$langAPI],
+                    "thumb_url" => asset("storage/Img/logo.jpg"),
+                    'description' => Lang::get("messages.clickToSend", [], "$lang"),
+                    'reply_markup' => $inline_keyboard,
                     'input_message_content' =>
                         new InputTextMessageContent(
                             [
-                                'message_text' => 'DDDDDD ' . $query,
+                                'message_text' => GetMessageFromData::generateCard($flight, $lang),
                             ]
-
                         ),
 
                 ],

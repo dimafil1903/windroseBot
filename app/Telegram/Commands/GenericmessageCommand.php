@@ -101,61 +101,13 @@ class GenericmessageCommand extends SystemCommand
 
         $chat = Chat::where('id', $chat_id)->first();
 
-        /**
-         * Начало работы с Меню
-         * Достаем Названия кнопок и смотрим совпадает ли присланное сообщение с названием кнопки
-         *
-         */
-        $limit = setting('telegram.count_of_main_menu');
-        $default_limit = 9;
-        if (!$limit) {
-            $limit = $default_limit;
-        }
-        $main_menu_items = MenuItem::
-        where('menu_id', '2')
-            ->orderBy('order', 'ASC')
-            ->limit($limit)->get();
-        $main_menu_items = $main_menu_items->translate($chat->lang);
-        /**
-         * BACK BUTTON
-         */
-        $prefix = telegram_config('buttons.pref_back_menu', $chat->lang);
-        if (!$prefix) {
-            $prefix = '';
-        } else {
-            $prefix = $prefix . ' ';
-        }
-        $postfix = telegram_config('buttons.post_back_menu', $chat->lang);;
-        if (!$postfix) {
-            $postfix = '';
-        } else {
-            $postfix = ' ' . $postfix;
-        }
-        foreach ($main_menu_items as $menu_item) {
-            if ($text == $prefix . $menu_item->title . $postfix) {
-                $this->closeConvers($message, $chat_id);
 
-                $subMenu = new GetMenuButtonMessage($menu_item->parent_id);
-                $keyboard = $subMenu->get_parentmenu($chat_id);
-
-
-                $data = [
-                    'chat_id' => $chat_id,
-                    'text' => $text,
-                    'reply_markup' => $keyboard,
-                ];
-
-                return Request::sendMessage($data);
-            }
-        }
-        /**
-         * Конец работы с Меню
-         */
         /**
          * НАЖАТИЕ КНОПКИ МОЙ СПИСОК РЕЙСОВ
          */
         if ($text == $this->getTitle('buttons.myFlightList')) {
-          $usersTracksFlights=FlightTracking::where('chat_id',$chat_id)->where('person_id',$message->getFrom()->getId())->get();
+          $usersTracksFlights=FlightTracking::where("status",1)->where('chat_id',$chat_id)->where('person_id',$message->getFrom()->getId())->get();
+
 
             if ($usersTracksFlights->isEmpty()){
                 $data=[
@@ -320,13 +272,56 @@ class GenericmessageCommand extends SystemCommand
          * кнопка рассылки
          */
 
-        $t = $this->getTitle('buttons.mailing');
-        if ($text == $t) {
-
-            $categories = new MailInlineKeyboard($chat_id);
-            $categories->show_keyboard($text);
-
+        /**
+         * Начало работы с Меню
+         * Достаем Названия кнопок и смотрим совпадает ли присланное сообщение с названием кнопки
+         *
+         */
+        $limit = setting('telegram.count_of_main_menu');
+        $default_limit = 9;
+        if (!$limit) {
+            $limit = $default_limit;
         }
+        $main_menu_items = MenuItem::
+        where('menu_id', '2')
+            ->orderBy('order', 'ASC')
+            ->limit($limit)->get();
+        $main_menu_items = $main_menu_items->translate($chat->lang);
+        /**
+         * BACK BUTTON
+         */
+        $prefix = telegram_config('buttons.pref_back_menu', $chat->lang);
+        if (!$prefix) {
+            $prefix = '';
+        } else {
+            $prefix = $prefix . ' ';
+        }
+        $postfix = telegram_config('buttons.post_back_menu', $chat->lang);;
+        if (!$postfix) {
+            $postfix = '';
+        } else {
+            $postfix = ' ' . $postfix;
+        }
+        foreach ($main_menu_items as $menu_item) {
+            if ($text == $prefix . $menu_item->title . $postfix) {
+                $this->closeConvers($message, $chat_id);
+
+                $subMenu = new GetMenuButtonMessage($menu_item->parent_id);
+                $keyboard = $subMenu->get_parentmenu($chat_id);
+
+
+                $data = [
+                    'chat_id' => $chat_id,
+                    'text' => $text,
+                    'reply_markup' => $keyboard,
+                ];
+
+                return Request::sendMessage($data);
+            }
+        }
+        /**
+         * Конец работы с Меню
+         */
 
 
         /**

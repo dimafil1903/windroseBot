@@ -14,12 +14,13 @@ class GetApi
      * @param $page
      * @return mixed
      */
-    static function getFlightsByDate($date, $page)
+    static function getFlightsByDate($date, $page = "")
     {
         $c = new FlightsByDateController;
         $request = env('APP_URL', null) . "/api/getFlightsByDate?date=$date&page=$page";
         $result = $c->getApiData($request);
 
+//        dd($result);
 //        dd($result);
 //        if (isset($result->code)) {
 //            if ($result->code==404)
@@ -35,13 +36,19 @@ class GetApi
      * @param $number
      * @return mixed
      */
-    static function getOneFlight($date,$page,$number)
+    static function getOneFlight($date, $number, $page = "")
     {
-      $data=  self::getFlightsByDate($date,$page);
-      if ($data) {
-          $flights = new Collection($data->data);
-          return $flights->where("flight_number", $number)->first();
-      }
+        $data = self::getFlightsByDate($date, $page);
+//      dd($data);
+        if ($data) {
+            if (isset($data->data)) {
+                $flights = new Collection($data->data);
+                $flight = $flights->where("flight_number", $number)->first();
+              if ($flight) return $flight;
+          }
+
+        }
+        return (object)["message" => "error", "code" => 404];
     }
 
     /**

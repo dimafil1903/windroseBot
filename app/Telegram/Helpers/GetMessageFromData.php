@@ -19,7 +19,7 @@ class GetMessageFromData
         $to=(array) $flight->to;
         $fleet= (array) $flight->fleet;
         $text=Lang::get("messages.flight_number", [], "$lang")."$flight->carrier-$flight->flight_number";
-        $text.="\n".Lang::get("messages.from", [], "$lang").$from["$langForApi"]."  ";
+        $text.="\n\n".Lang::get("messages.from", [], "$lang").$from["$langForApi"]."  ";
         if (!empty($flight->from_terminal)) {
             $text.=Lang::get("messages.from_terminal", [], "$lang").$flight->from_terminal;
         }
@@ -32,7 +32,7 @@ class GetMessageFromData
         $text.="\n".Lang::get("messages.arrival_date", [], "$lang").date( "d.m.Y", strtotime( "$flight->arrival_date" ) )  ;
         $text.="\n".Lang::get("messages.arrival_time", [], "$lang").date( "H:i", strtotime( "$flight->arrival_date" ) )  ;
         $text.="\n".Lang::get("messages.timeInFlight", [], "$lang").FlightHelper::GetTimeInFlight($flight);
-        $text.="\n".Lang::get("messages.status", [], "$lang").FlightHelper::GetStatus($flight)->message;
+        $text.="\n\n".Lang::get("messages.status", [], "$lang").FlightHelper::GetStatus($flight,$lang)->message;
 
         return $text;
     }

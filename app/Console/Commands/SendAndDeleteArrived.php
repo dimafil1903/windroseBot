@@ -2,26 +2,30 @@
 
 namespace App\Console\Commands;
 
+use App\Chat;
 use App\FlightTracking;
 use App\Telegram\Helpers\GetApi;
 use App\User;
+use DateTime;
+use DateTimeZone;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Longman\TelegramBot\Exception\TelegramException;
 use Longman\TelegramBot\Request;
 use PhpTelegramBot\Laravel\PhpTelegramBotContract;
 
-class TrackingFlights extends Command
+class SendAndDeleteArrived extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'track:changeDelay';
+    protected $signature = 'track:sendArrived';
 
     /**
      * The console command description.
@@ -49,31 +53,34 @@ class TrackingFlights extends Command
      */
     public function handle(PhpTelegramBotContract $telegram_bot)
     {
-        $tracksWithDelay = FlightTracking::where("date", date("Y-m-d "))->where("status", 1)->get();
-        foreach ($tracksWithDelay as $item) {
-            $flight = GetApi::getOneFlight($item->date,  $item->flight_number,$item->page);
-            if ($flight->delay !== "0") {
-                if ($item->delay !== $flight->delay) {
+        $currentTime = new DateTime('NOW', new DateTimeZone('Europe/Kiev'));
+        $tracksToDelete = FlightTracking::
+//            ->where("delay","0")
+        where("expired_at", "<=", $currentTime->format("Y-m-d H:i:s"))
+            ->get();
+//        var_dump($tracksToDelete);
+        $this->info($currentTime->format("Y-m-d H:i:s"));
+        if ($tracksToDelete->isNotEmpty()) {
+            foreach ($tracksToDelete as $item) {
+//                $flight = GetApi::getOneFlight($item->date, $item->flight_number, $item->page);
 
-                    var_dump($flight);
+
+                if ($item->status == 1) {
+                    $chat = Chat::find($item->chat_id);
+//                        var_dump($flight);
                     $this->info("$item->date");
                     $data = [
                         "chat_id" => $item->chat_id,
-
-                        "text" => "$flight->flight_number BRO tam delay=" . gmdate("H:i", (int)$flight->delay)
-
+                        "text" => $item->flight_number . " " . Lang::get("messages.messageAboutArrived", [], "$chat->lang")
                     ];
                     Request::sendMessage($data);
-
-                    $flightUpdate = FlightTracking::find($item->id);
-                    $flightUpdate->delay = $flight->delay;
-                    $flightUpdate->delay_send++;
-                    $flightUpdate->expired_at=date("Y-m-d H:i:s",strtotime($flightUpdate->expired_at)+$flight->delay);
-                    $flightUpdate->save();
                 }
+                FlightTracking::destroy($item->id);
+
+
             }
-        }
 //        $this->info("IM Start");
-        Log::info("IM START log");
+            Log::info("IM START log");
+        }
     }
 }

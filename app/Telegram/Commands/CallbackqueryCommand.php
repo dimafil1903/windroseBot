@@ -17,6 +17,7 @@ use App\MenuItem;
 use App\ShopCategory;
 use App\ShopProduct;
 use App\Telegram\Helpers\ConvertDate;
+use App\Telegram\Helpers\FlightHelper;
 use App\Telegram\Helpers\GetApi;
 use App\Telegram\Helpers\GetMessageFromData;
 use App\Telegram\keyboards\CartKeyboard;
@@ -166,14 +167,49 @@ class CallbackqueryCommand extends SystemCommand
             if (isset($fligtsData->data)) {
                 $flights = new Collection($fligtsData->data);
                 $flight = $flights->where("flight_number", $number)->first();
+                $replyMarkup=$flightsList->createCardButtons($flight, $page, $date, $chat->lang);
+
+                if (isset($callbackPiece[4])) {
+                    if ($callbackPiece[4]=="myList"){
+                        $replyMarkup=  $flightsList->createCardButtons($flight, $page, $date, $chat->lang,'myList');
+
+                    }
+                }
+
                 $data = array(
                     "chat_id" => $chat_id,
                     'message_id' => $callback_message_id,
                     "text" => GetMessageFromData::generateCard($flight, $chat->lang),
-                    "reply_markup" => $flightsList->createCardButtons($flight, $page, $date, $chat->lang)
-                );
+                    "reply_markup" =>   $replyMarkup,);
                  Request::editMessageReplyMarkup($data);
                  Request::editMessageText($data);
+            }
+        }
+        if ($callback_data=="backToMyFlightList"){
+//            dd("DD");
+            $usersTracksFlights=FlightTracking::
+            where("status",1)
+                ->where('chat_id',$chat_id)->get();
+
+
+
+            if ($usersTracksFlights->isEmpty()){
+                $data=[
+                    "chat_id"=>$chat_id,
+                    "text"=>Lang::get("messages.emptyFlightsList", [], "$chat->lang"),
+                ];
+            }else {
+                $keyboard = new CreateInlineKeyboard($chat_id);
+                $keyboard = $keyboard->createMyFlightsList($usersTracksFlights);
+                $data = [
+                    "chat_id" => $chat_id,
+                    "message_id"=>$callback_message_id,
+                    "text" => Lang::get("messages.FlightsListText", [], "$chat->lang"),
+                    "reply_markup" => $keyboard
+                ];
+
+                Request::editMessageText($data);
+                Request::editMessageReplyMarkup($data);
             }
         }
         if ($callbackPiece[0] == 'track') {
@@ -181,9 +217,25 @@ class CallbackqueryCommand extends SystemCommand
             $page = $callbackPiece[2];
             $flight_number = $callbackPiece[3];
             $status = $callbackPiece[4];
-            $flight = GetApi::getOneFlight($date, $page, $flight_number);
+            $flight = GetApi::getOneFlight($date, $flight_number,$page);
 //            dd($flight);
-
+            $code=FlightHelper::GetStatus($flight,$chat->lang)->code;
+            if ($code==2 && $code==3){
+                $answer_text=Lang::get("messages.thisFlightAlreadyArrived", [], "$chat->lang");
+                $data = [
+                    'callback_query_id' => $callback_query_id,
+                    'text' => $answer_text,
+                    'show_alert' => "thumb up",
+                    'cache_time' => 1,
+                ];
+                Request::answerCallbackQuery($data);
+                return Request::emptyResponse();
+            }
+            if ($flight->delay!="0"){
+                $expired_at=date("Y-m-d H:i:s",strtotime($flight->arrival_date)+$flight->delay);
+            }else{
+                $expired_at=$flight->arrival_date;
+            }
 
             $createFlightTracking = FlightTracking::updateOrCreate([
                 "date" => $date,
@@ -197,7 +249,8 @@ class CallbackqueryCommand extends SystemCommand
                     "fromJSON"=>\GuzzleHttp\json_encode($flight->from),
                     "toJSON"=>\GuzzleHttp\json_encode($flight->to),
                     "status" => $status,
-
+                    "delay" => $flight->delay,
+                    "expired_at" => $expired_at,
                     "departure_date" => $flight->departure_date,
                     "arrival_date" => $flight->arrival_date,
                 ]);

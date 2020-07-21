@@ -31,6 +31,10 @@ class FlightsByDateController extends Controller
         if ($request['page']) {
             $current_page = $request['page'];
         }
+        $withoutPagination=false;
+        if (!$request["page"]){
+            $withoutPagination=true;
+        }
         $data = ($this->getApiData("https://eapi.windrose.kiev.ua/windrose/website/schedule/?date=" . $request['date']));
 
 //        dd($data->code);
@@ -76,7 +80,9 @@ class FlightsByDateController extends Controller
             $All_INFO->put("last_page", $lastPage);
             $All_INFO->put("date", $date);
             $All_INFO->put("current_page", $current_page);
-            $returnData = $returnData->forPage($current_page, 10);
+
+            if (!$withoutPagination)
+                $returnData = $returnData->forPage($current_page, 10);
             $All_INFO->put("data", $returnData);
             return response($All_INFO->toJson(), 200);
         } else {

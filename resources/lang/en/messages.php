@@ -38,5 +38,10 @@ return [
     "share"=>"Share",
     "backToList"=>"Back to list",
     "FlightsListText"=>"List of flights you are tracking: ",
-    "track"=>"Track"
+    "track"=>"Track",
+    "tracking"=>"I'm tracking",
+    "scheduled"=>"Scheduled",
+    "arrived"=>"Arrived",
+    "delay"=>"delay",
+    "inFlight"=>"In flight"
 ];

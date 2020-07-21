@@ -4,29 +4,41 @@
 namespace App\Telegram\Helpers;
 
 
+use DateTime;
+use DateTimeZone;
+use Illuminate\Support\Facades\Lang;
+
 class FlightHelper
 {
 
-    static function GetStatus($flight)
+    static function GetStatus($flight,$lang)
     {
+        $currentTime = new DateTime('NOW', new DateTimeZone('Europe/Kiev'));
+        $departure_date=new DateTime($flight->departure_date, new DateTimeZone('Europe/Kiev'));
+        $arrival_date=new DateTime($flight->arrival_date, new DateTimeZone('Europe/Kiev'));
+
         $status="";
-        $currentTime=strtotime(date("Y-m-d H:i:s"));
+//        $currentTime=strtotime(date("Y-m-d H:i:s"));
         $code=0;
         if ($flight->delay=="0"){
-            $status="Scheduled";
+            $status=Lang::get("messages.scheduled", [], "$lang");
             $code=0;
         }
-        if ($currentTime>strtotime($flight->arrival_date)){
-            $status="Arrived";
+        if ($currentTime>$arrival_date){
+            $status=Lang::get("messages.arrived", [], "$lang");
             $code=2;
         }
-        if ($currentTime>strtotime($flight->departure_date)&&$currentTime<strtotime($flight->arrival_date) ){
-            $status="InFlight";
+        if ($currentTime>$departure_date&&$currentTime<$arrival_date ){
+            $status=Lang::get("messages.inFlight", [], "$lang");
             $code=1;
         }
-        if ($flight->delay!=="0"){
-            $status.=" delay: +".date("H:i",$flight->delay);
+        if ($code==2 && $flight->delay!="0"){
+            $status= Lang::get("messages.arrived", [], "$lang").", ".Lang::get("messages.delay", [], "$lang").": +".date("H:i",$flight->delay);
             $code=3;
+        }
+        if ($code==1  && $flight->delay!="0"){
+            $status= Lang::get("messages.inFlight", [], "$lang").", ".Lang::get("messages.delay", [], "$lang").": +".date("H:i",$flight->delay);
+            $code=4;
         }
         return (object)["message"=>$status,"code"=>$code];
     }
