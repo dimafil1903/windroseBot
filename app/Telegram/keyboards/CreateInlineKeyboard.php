@@ -25,6 +25,9 @@ class CreateInlineKeyboard
     {
         $chat = Chat::find($this->chat_id);
         $array = [];
+        if (isset($data->code))
+        return false;
+//        if (isset($date->date))
         $date = $data->date;
         $current_page = $data->current_page;
 //        $last_page=$data->last_page;
@@ -76,7 +79,7 @@ class CreateInlineKeyboard
                 if ($flightInDB->status == 0) {
                     $status = 1;
                 } else {
-                    $isEnabled = "✅";
+                    $isEnabled = "❌";
                     $track = Lang::get("messages.tracking", [], "$lang");
                     $status = 0;
                 }
@@ -87,8 +90,13 @@ class CreateInlineKeyboard
             $keyboard = [];
 //            dd(FlightHelper::GetStatus($flight)->code);
             if (FlightHelper::GetStatus($flight, $lang)->code !== 2 && FlightHelper::GetStatus($flight, $lang)->code !== 3) {
-                array_push($keyboard, [['text' => $track . " $isEnabled", 'callback_data' => "track_$date" . "_$page" . "_$flight->flight_number" . "_$status"]]);
-            }
+                if ($type=="myList") {
+                    array_push($keyboard, [['text' => $track . " $isEnabled", 'callback_data' => "track_$date" . "_$page" . "_$flight->flight_number" . "_$status" . "_myList"]]);
+                }elseif ($type == "list"){
+                    array_push($keyboard, [['text' => $track . " $isEnabled", 'callback_data' => "track_$date" . "_$page" . "_$flight->flight_number" . "_$status" ]]);
+
+                }
+                }
             array_push($keyboard, [['text' => Lang::get("messages.share", [], "$lang"), 'switch_inline_query' => "$flight->carrier-$flight->flight_number $date"]]);
             if ($type == "list") {
                 array_push($keyboard, [['text' => Lang::get("messages.backToList", [], "$lang"), 'callback_data' => "backToFlightList_$date" . "_$page"]]);
@@ -146,5 +154,9 @@ class CreateInlineKeyboard
 
         }
         return $inline_keyboard;
+    }
+
+    public function CreateMyListButton(){
+
     }
 }

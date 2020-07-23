@@ -231,7 +231,7 @@
 
         @foreach($settings as $group => $group_settings)
 
-                <div class="col-lg-4 col-6" >
+                <div class="row" >
                     <div class="page-content settings container">
                         <ul class="nav nav-tabs">
 
@@ -240,10 +240,11 @@
                                 </li>
 
                         </ul>
-                        <div class="tab-content">
+                        <div class="tab-content row">
                             <div id="{{ \Illuminate\Support\Str::slug($group) }}" class="tab-pane fade in active ">
 
                                 @foreach($group_settings as $setting)
+                                    <div class="col-6">
                                     <form action="{{ url('admin/telegram-config/'.$setting->id) }}" method="POST" enctype="multipart/form-data">
                                         {{ method_field("PUT") }}
                                         {{ csrf_field() }}
@@ -422,6 +423,7 @@
                                         <hr>
                                     @endif
                                     </form>
+                                    </div>
                                 @endforeach
 
                             </div>

@@ -6,6 +6,7 @@ use App\Chat;
 use App\CheckedByUser;
 use App\Console\Commands\MakeUser;
 use App\Console\Commands\SendAndDeleteArrived;
+use App\Console\Commands\SendInFlight;
 use App\Console\Commands\TrackingFlights;
 use App\DistributionType;
 
@@ -26,7 +27,8 @@ class Kernel extends ConsoleKernel
         Commands\TestCron::class,
         MakeUser::class,
         TrackingFlights::class,
-        SendAndDeleteArrived::class
+        SendAndDeleteArrived::class,
+        SendInFlight::class,
     ];
     public $distribution;
 
@@ -39,8 +41,9 @@ class Kernel extends ConsoleKernel
      */
     public function schedule(Schedule $schedule)
     {
-        $schedule->command('track:dayBeforeFlight')->everyTenMinutes();
+        $schedule->command("track:changeDelay")->everyTenMinutes();
         $schedule->command('track:sendArrived')->everyFiveMinutes();
+        $schedule->command('track:inFlight')->everyFiveMinutes();
 //         $schedule->command('test:cron')->
 
 

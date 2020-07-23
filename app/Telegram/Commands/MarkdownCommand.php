@@ -10,6 +10,7 @@
 
 namespace Longman\TelegramBot\Commands\UserCommands;
 
+use Longman\TelegramBot\Commands\AdminCommand;
 use Longman\TelegramBot\Commands\UserCommand;
 use Longman\TelegramBot\Entities\ReplyKeyboardMarkup;
 use Longman\TelegramBot\Request;
@@ -19,7 +20,7 @@ use Longman\TelegramBot\Request;
  *
  * Print some markdown text.
  */
-class MarkdownCommand extends UserCommand
+class MarkdownCommand extends AdminCommand
 {
     /**
      * @var string

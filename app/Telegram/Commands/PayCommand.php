@@ -2,11 +2,12 @@
 namespace Longman\TelegramBot\Commands\SystemCommands;
 
 use App\LiqPay;
+use Longman\TelegramBot\Commands\AdminCommand;
 use Longman\TelegramBot\Commands\SystemCommand;
 use Longman\TelegramBot\Commands\UserCommand;
 use Longman\TelegramBot\Request;
 use Longman\TelegramBot\Entities\Payments;
-class PayCommand extends UserCommand {
+class PayCommand extends AdminCommand {
     protected $name = 'pay';
     protected $usage = '/pay';
 

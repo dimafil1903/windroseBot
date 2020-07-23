@@ -14,7 +14,14 @@ return [
 
 
     'of' => 'of',
+    "startMessage"=>"Hi :name! 👋 \nI :nameBot. Here's what I can do:
 
+- Show flight list for day 📅
+- Track a specific flight 🛫
+- Notify in case of change of flight status 🔔
+
+Select menu item 👇
+",
     'changedLang' => 'Language was set',
     'inputYourDate' => 'Enter the date to view the flights',
     'example' => "for example: 20.07",
@@ -39,9 +46,17 @@ return [
     "backToList"=>"Back to list",
     "FlightsListText"=>"List of flights you are tracking: ",
     "track"=>"Track",
-    "tracking"=>"I'm tracking",
+    "tracking"=>"Stop tracking",
     "scheduled"=>"Scheduled",
     "arrived"=>"Arrived",
     "delay"=>"delay",
-    "inFlight"=>"In flight"
+    "inFlight"=>"In flight",
+    'answerForTrack'=>"Great 😁, now you're following the flight: ",
+    "clickToSend"=>"Click to send! ✈️",
+    'messageAboutArrived'=>"Flight :flight arrived at :time",
+    "emptyFlightsList"=>"Oops, your flight tracking list is empty. Start following the flight and it will appear here",
+    "NoFlightsOnThisDate"=>"There are no flights on this date",
+    "serverError"=>"OOOOOPS, we have some server issues",
+    "thisFlightAlreadyArrived"=>"Sorry, but this flight has already arrived",
+
 ];

@@ -10,6 +10,7 @@
 
 namespace Longman\TelegramBot\Commands\UserCommands;
 
+use Longman\TelegramBot\Commands\AdminCommand;
 use Longman\TelegramBot\Commands\UserCommand;
 use Longman\TelegramBot\Conversation;
 use Longman\TelegramBot\Entities\Keyboard;
@@ -22,7 +23,7 @@ use Longman\TelegramBot\Request;
  * returns a message to let the user know which conversation it was.
  * If no conversation is active, the returned message says so.
  */
-class CancelCommand extends UserCommand
+class CancelCommand extends AdminCommand
 {
     /**
      * @var string

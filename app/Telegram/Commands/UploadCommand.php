@@ -10,6 +10,7 @@
 
 namespace Longman\TelegramBot\Commands\UserCommands;
 
+use Longman\TelegramBot\Commands\AdminCommand;
 use Longman\TelegramBot\Commands\UserCommand;
 use Longman\TelegramBot\Conversation;
 use Longman\TelegramBot\Entities\Keyboard;
@@ -20,7 +21,7 @@ use Longman\TelegramBot\Request;
  *
  * A command that allows users to upload files to your bot, saving them to the bot's "Download" folder.
  */
-class UploadCommand extends UserCommand
+class UploadCommand extends AdminCommand
 {
     /**#@+
      * {@inheritdoc}

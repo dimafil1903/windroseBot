@@ -10,6 +10,7 @@
 
 namespace Longman\TelegramBot\Commands\UserCommands;
 
+use Longman\TelegramBot\Commands\AdminCommand;
 use Longman\TelegramBot\Commands\UserCommand;
 use Longman\TelegramBot\Entities\Keyboard;
 use Longman\TelegramBot\Request;
@@ -19,7 +20,7 @@ use Longman\TelegramBot\Request;
  *
  * Command to hide the keyboard.
  */
-class HidekeyboardCommand extends UserCommand
+class HidekeyboardCommand extends AdminCommand
 {
     /**
      * @var string

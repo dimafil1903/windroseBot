@@ -39,14 +39,14 @@ class MainKeyboard
         foreach ($main_menu as $item){
             array_push($itemsInData, $item->title);
             $i++;
-                if(count($itemsInData)==3){
+                if(count($itemsInData)==2){
                     array_push($data, $itemsInData);
                     $itemsInData=[];
                 }
             }
-            if ($main_menu->count()%3==2){
+            if ($main_menu->count()%2==2){
                 array_push($data, [$main_menu->get($main_menu->count()-2)->title,$main_menu->get($main_menu->count()-1)->title]);
-            }elseif ($main_menu->count()%3==1){
+            }elseif ($main_menu->count()%2==1){
                 array_push($data, $main_menu->get($main_menu->count()-1)->title);
             } else if($count==2){
                  array_push($data, [$main_menu->get(0)->title,$main_menu->get(1)->title]);

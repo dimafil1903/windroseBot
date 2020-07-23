@@ -21,22 +21,20 @@ use App\Telegram\Helpers\ConvertDate;
 use App\Telegram\Helpers\GetApi;
 use App\Telegram\keyboards\CreateInlineKeyboard;
 use App\Telegram\keyboards\LangInlineKeyboard;
-use App\Telegram\keyboards\MailInlineKeyboard;
 
-use App\Http\Controllers\FlightsByDateController;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Date;
+
+use DateTime;
+use DateTimeZone;
+
 use Illuminate\Support\Facades\Lang;
 use Longman\TelegramBot\Commands\SystemCommand;
 use Longman\TelegramBot\Conversation;
 use Longman\TelegramBot\Request;
-use Longman\TelegramBot\Entities\InlineKeyboard;
-use Longman\TelegramBot\Entities\Keyboard;
+
 use Longman\TelegramBot\Entities\ServerResponse;
 use Longman\TelegramBot\Exception\TelegramException;
 use App\Telegram\keyboards\GetMenuButtonMessage;
-use Illuminate\Support\Facades\DB;
-use App\TelegramSetting;
+
 
 use App\Conversation as Convers;
 
@@ -106,21 +104,21 @@ class GenericmessageCommand extends SystemCommand
          * НАЖАТИЕ КНОПКИ МОЙ СПИСОК РЕЙСОВ
          */
         if ($text == $this->getTitle('buttons.myFlightList')) {
-          $usersTracksFlights=FlightTracking::where("status",1)->where('chat_id',$chat_id)->where('person_id',$message->getFrom()->getId())->get();
+            $usersTracksFlights = FlightTracking::where("status", 1)->where('chat_id', $chat_id)->where('person_id', $message->getFrom()->getId())->get();
 
 
-            if ($usersTracksFlights->isEmpty()){
-                $data=[
-                    "chat_id"=>$chat_id,
-                    "text"=>Lang::get("messages.emptyFlightsList", [], "$chat->lang"),
+            if ($usersTracksFlights->isEmpty()) {
+                $data = [
+                    "chat_id" => $chat_id,
+                    "text" => Lang::get("messages.emptyFlightsList", [], "$chat->lang"),
                 ];
-            }else{
-                $keyboard=new CreateInlineKeyboard($chat_id);
-                $keyboard=$keyboard->createMyFlightsList($usersTracksFlights);
-                $data=[
-                    "chat_id"=>$chat_id,
-                    "text"=>Lang::get("messages.FlightsListText", [], "$chat->lang"),
-                    "reply_markup"=>$keyboard
+            } else {
+                $keyboard = new CreateInlineKeyboard($chat_id);
+                $keyboard = $keyboard->createMyFlightsList($usersTracksFlights);
+                $data = [
+                    "chat_id" => $chat_id,
+                    "text" => Lang::get("messages.FlightsListText", [], "$chat->lang"),
+                    "reply_markup" => $keyboard
                 ];
             }
 
@@ -128,7 +126,7 @@ class GenericmessageCommand extends SystemCommand
 //          $data=['chat_id'=>$chat_id];
 //          $data["text"]="YOUR LIST";
 //          $data["reply_markup"]=$keyboard;
-          Request::sendMessage($data);
+            Request::sendMessage($data);
         }
 
         /**
@@ -156,15 +154,23 @@ class GenericmessageCommand extends SystemCommand
         $format = "Y-m-d";
         $date = false;
         if ($text == $this->getTitle('buttons.today')) {
-            $date = date($format);
+            $date = new DateTime('NOW', new DateTimeZone('Europe/Kiev'));
+
+            $date = $date->format($format);
 //            dd($date);
         } elseif ($text == $this->getTitle('buttons.tomorrow')) {
-            $d = strtotime("tomorrow");
-            $date = date($format, $d);
+
+            $date = new DateTime('tomorrow', new DateTimeZone('Europe/Kiev'));
+
+            $date = $date->format($format);
+
 //            dd($date);
         } elseif ($text == $this->getTitle('buttons.yesterday')) {
-            $d = strtotime("yesterday");
-            $date = date($format, $d);
+//            $d = strtotime("yesterday");
+            $date = new DateTime('yesterday', new DateTimeZone('Europe/Kiev'));
+
+            $date = $date->format($format);
+//            $date = date($format, $d);
 //            dd($date);
         } elseif ($text == $this->getTitle('buttons.your_date')) {
             $convers = new Conversation($message->getFrom()->getId(), $chat_id, "your_date");
@@ -251,6 +257,11 @@ class GenericmessageCommand extends SystemCommand
                 if ($api->code == 404) {
 
                     $data["text"] = $errorMessage = Lang::get("messages.NoFlightsOnThisDate", [], "$chat->lang");
+                    return Request::sendMessage($data);
+                }
+                if ($api->code == 500) {
+
+                    $data["text"] = $errorMessage = Lang::get("messages.serverError", [], "$chat->lang");
                     return Request::sendMessage($data);
                 }
             }

@@ -14,6 +14,7 @@ use App\Chat;
 use App\Telegram\Helpers\GetApi;
 use App\Telegram\Helpers\GetMessageFromData;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Log;
 use Longman\TelegramBot\Commands\SystemCommand;
 use Longman\TelegramBot\Entities\InlineKeyboard;
 use Longman\TelegramBot\Entities\InlineQuery\InlineQueryResultArticle;
@@ -47,7 +48,7 @@ class InlinequeryCommand extends SystemCommand
     /**
      * Command execute method
      *
-     * @return void
+     * @return bool
      * @throws TelegramException
      */
     public function execute()
@@ -74,22 +75,23 @@ class InlinequeryCommand extends SystemCommand
 //        dd($flight);
         if (isset($flight->code))
             if ($flight->code == 404) {
-                dd($flight);
+                Log::error("User cant find a flights in inline mode");
+                return false;
             }
         $array = [];
-        $miniArray = [
-            ['text' => "Отслеживать вместе со мной", 'url' => "t.me/windroseHelpBot?start="],
-        ];
+
         $chat = Chat::find($inline_query->getFrom()->getId());
         $langAPI = $lang = $chat->lang;
-        array_push($array, $miniArray);
+
         $from = (array)$flight->from;
         $to = (array)$flight->to;
 
         //$langAPI = $lang;
         if ($lang == "uk") $langAPI = "ua";
-
-
+        $miniArray = [
+            ['text' => Lang::get("messages.track", [], "$lang"), 'url' => "t.me/windroseHelpBot?start=track_$date" . "_$lang" . "_$flight->flight_number" . "_1" . "_myList"],
+        ];
+        array_push($array, $miniArray);
         $inline_keyboard = new InlineKeyboard($array);
         if ($query !== '') {
             $articles = [
@@ -121,5 +123,6 @@ class InlinequeryCommand extends SystemCommand
         $data['results'] = '[' . implode(',', $results) . ']';
 
         Request::answerInlineQuery($data);
+        return true;
     }
 }

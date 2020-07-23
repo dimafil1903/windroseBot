@@ -10,6 +10,7 @@
 
 namespace Longman\TelegramBot\Commands\UserCommands;
 
+use Longman\TelegramBot\Commands\AdminCommand;
 use Longman\TelegramBot\Commands\UserCommand;
 use Longman\TelegramBot\Request;
 
@@ -18,7 +19,7 @@ use Longman\TelegramBot\Request;
  *
  * Simply echo the input back to the user.
  */
-class EchoCommand extends UserCommand
+class EchoCommand extends AdminCommand
 {
     /**
      * @var string

@@ -10,6 +10,7 @@
 
 namespace Longman\TelegramBot\Commands\UserCommands;
 
+use Longman\TelegramBot\Commands\AdminCommand;
 use Longman\TelegramBot\Commands\UserCommand;
 use Longman\TelegramBot\Request;
 
@@ -18,7 +19,7 @@ use Longman\TelegramBot\Request;
  *
  * Command to edit a message via bot.
  */
-class EditmessageCommand extends UserCommand
+class EditmessageCommand extends AdminCommand
 {
     /**
      * @var string

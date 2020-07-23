@@ -10,6 +10,7 @@
 
 namespace Longman\TelegramBot\Commands\UserCommands;
 
+use Longman\TelegramBot\Commands\AdminCommand;
 use Longman\TelegramBot\Commands\UserCommand;
 use Longman\TelegramBot\Request;
 
@@ -18,7 +19,7 @@ use Longman\TelegramBot\Request;
  *
  * Fetch any uploaded image from the Uploads path.
  */
-class ImageCommand extends UserCommand
+class ImageCommand extends AdminCommand
 {
     /**
      * @var string

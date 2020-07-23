@@ -64,14 +64,23 @@ class SendAndDeleteArrived extends Command
             foreach ($tracksToDelete as $item) {
 //                $flight = GetApi::getOneFlight($item->date, $item->flight_number, $item->page);
 
-
+//                var_dump($item->from);
+                $from=(array) json_decode($item->fromJSON);
+//                var_dump($from);
+                $to=(array) json_decode($item->toJSON);
+                $chat=Chat::find($item->chat_id);
+                $lang=$chat->lang;
+                $langApi=$lang;
+                if ($lang=="uk"){
+                    $langApi="ua";
+                }
                 if ($item->status == 1) {
                     $chat = Chat::find($item->chat_id);
-//                        var_dump($flight);
+
                     $this->info("$item->date");
                     $data = [
                         "chat_id" => $item->chat_id,
-                        "text" => $item->flight_number . " " . Lang::get("messages.messageAboutArrived", [], "$chat->lang")
+                        "text" =>   " " . Lang::get("messages.messageAboutArrived", ["flight"=>"$item->carrier-$item->flight_number ". $from["$langApi"]."-".$to["$langApi"],"time"=>"$item->expired_at"], "$chat->lang")
                     ];
                     Request::sendMessage($data);
                 }

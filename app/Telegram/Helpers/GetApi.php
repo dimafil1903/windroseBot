@@ -39,27 +39,15 @@ class GetApi
     static function getOneFlight($date, $number, $page = "")
     {
         $data = self::getFlightsByDate($date, $page);
-//      dd($data);
         if ($data) {
             if (isset($data->data)) {
                 $flights = new Collection($data->data);
                 $flight = $flights->where("flight_number", $number)->first();
-              if ($flight) return $flight;
-          }
+                if ($flight) return $flight;
+            }
 
         }
         return (object)["message" => "error", "code" => 404];
     }
 
-    /**
-     * @param $number
-     * @return mixed
-     * FUTURE FUNCTION
-     */
-    static function getFlightByNumber($number)
-    {
-//        $data=  self::getFlightsByDate();
-//        $flights = new Collection($data->data);
-//        return $flights->where("flight_number", $number)->first();
-    }
 }

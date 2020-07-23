@@ -2,12 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Chat;
 use App\FlightTracking;
 use App\Telegram\Helpers\GetApi;
 use App\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Longman\TelegramBot\Exception\TelegramException;
@@ -56,11 +58,12 @@ class TrackingFlights extends Command
                 if ($item->delay !== $flight->delay) {
 
                     var_dump($flight);
+                    $chat=Chat::find($item->chat_id);
                     $this->info("$item->date");
                     $data = [
                         "chat_id" => $item->chat_id,
 
-                        "text" => "$flight->flight_number BRO tam delay=" . gmdate("H:i", (int)$flight->delay)
+                        "text" => Lang::get("messages.messageAboutDelay", ["number" =>$flight->carrier."-".$flight->flight_number, "delay" =>  gmdate("H:i", (int)$flight->delay)], "$chat->lang")
 
                     ];
                     Request::sendMessage($data);

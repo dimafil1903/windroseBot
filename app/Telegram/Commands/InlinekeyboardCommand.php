@@ -10,6 +10,7 @@
 
 namespace Longman\TelegramBot\Commands\UserCommands;
 
+use Longman\TelegramBot\Commands\AdminCommand;
 use Longman\TelegramBot\Commands\UserCommand;
 use Longman\TelegramBot\Entities\InlineKeyboard;
 use Longman\TelegramBot\Request;
@@ -19,7 +20,7 @@ use Longman\TelegramBot\Request;
  *
  * Display an inline keyboard with a few buttons.
  */
-class InlinekeyboardCommand extends UserCommand
+class InlinekeyboardCommand extends AdminCommand
 {
     /**
      * @var string

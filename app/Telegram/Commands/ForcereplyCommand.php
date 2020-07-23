@@ -10,6 +10,7 @@
 
 namespace Longman\TelegramBot\Commands\UserCommands;
 
+use Longman\TelegramBot\Commands\AdminCommand;
 use Longman\TelegramBot\Commands\UserCommand;
 use Longman\TelegramBot\Entities\Keyboard;
 use Longman\TelegramBot\Request;
@@ -19,7 +20,7 @@ use Longman\TelegramBot\Request;
  *
  * Force a reply to a message.
  */
-class ForcereplyCommand extends UserCommand
+class ForcereplyCommand extends AdminCommand
 {
     /**
      * @var string

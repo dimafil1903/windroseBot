@@ -12,6 +12,7 @@ namespace Longman\TelegramBot\Commands\UserCommands;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use Longman\TelegramBot\Commands\AdminCommand;
 use Longman\TelegramBot\Commands\UserCommand;
 use Longman\TelegramBot\Request;
 use Longman\TelegramBot\TelegramLog;
@@ -24,7 +25,7 @@ use Longman\TelegramBot\TelegramLog;
  * A Google API key is required for this command, and it can be set in your hook file:
  * $telegram->setCommandConfig('date', ['google_api_key' => 'your_api_key']);
  */
-class DateCommand extends UserCommand
+class DateCommand extends AdminCommand
 {
     /**
      * @var string

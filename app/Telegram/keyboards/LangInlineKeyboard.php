@@ -11,6 +11,7 @@ use Longman\TelegramBot\Entities\InlineKeyboard;
 use Longman\TelegramBot\Exception\TelegramException;
 use Longman\TelegramBot\Request;
 use App\Telegram\keyboards\MainKeyboard;
+
 class LangInlineKeyboard
 {
 
@@ -18,13 +19,14 @@ class LangInlineKeyboard
     public $chat_id;
     public $callback_message_id;
 
-    public function  __construct($chat_id)
+    public function __construct($chat_id)
     {
-        $this->chat_id=$chat_id;
+        $this->chat_id = $chat_id;
 
     }
 
-    public function create_inline_menu(){
+    public function create_inline_menu()
+    {
         try {
             $inline_keyboard = new InlineKeyboard([[
 //                ['text' => '🇷🇺  ', 'callback_data' => 'lang_ru'],
@@ -35,10 +37,10 @@ class LangInlineKeyboard
             Log::error('Something is really going wrong.');
 
         }
-        $choose_lang_text='Оберіть мову / choose language';
+        $choose_lang_text = 'Оберіть мову / choose language';
         $data = [
             'chat_id' => $this->chat_id,
-            'text'    => $choose_lang_text,
+            'text' => $choose_lang_text,
             'reply_markup' => $inline_keyboard,
 
         ];
@@ -50,37 +52,37 @@ class LangInlineKeyboard
         }
     }
 
-    public function set($language,$callback_message_id){
+    public function set($language, $callback_message_id)
+    {
 
 
         $settings = TelegramSetting::first();
 
 
+        $settings = $settings->translate($language);
+        $change_lang_text = $settings->message_on_success_lang_change;
+        Chat::where('id', $this->chat_id)->update(['lang' => $language]);
+        $data = [
+            'chat_id' => $this->chat_id,
+            'message_id' => $callback_message_id,
+        ];
+        Request::deleteMessage($data);
 
-                $settings=  $settings->translate($language);
-                $change_lang_text = $settings->message_on_success_lang_change;
-                Chat::where('id',$this->chat_id)->update(['lang' => $language]);
-                $data=[
-                    'chat_id'=>$this->chat_id,
-                    'message_id'=>$callback_message_id,
-                ];
-                Request::deleteMessage($data);
+        $keyboard = new MainKeyboard;
+        $keyboard = $keyboard->getMainKeyboard($this->chat_id);
+        $data = [
+            'chat_id' => $this->chat_id,
+            'text' => $change_lang_text,
+            'reply_markup' => $keyboard,
 
-                $keyboard = new MainKeyboard;
-                $keyboard = $keyboard->getMainKeyboard($this->chat_id);
-                $data = [
-                    'chat_id' => $this->chat_id,
-                    'text'    => $change_lang_text,
-                    'reply_markup' => $keyboard,
+        ];
 
-                ];
-
-                try {
-                    Request::sendMessage($data);
-                } catch (TelegramException $e) {
-                }
-
+        try {
+            Request::sendMessage($data);
+        } catch (TelegramException $e) {
         }
+
+    }
 
 
 }
