@@ -53,10 +53,10 @@ class SendAndDeleteArrived extends Command
      */
     public function handle(PhpTelegramBotContract $telegram_bot)
     {
-        $currentTime = new DateTime('NOW', new DateTimeZone('Europe/Kiev'));
+        $currentTime = new DateTime('NOW');
         $tracksToDelete = FlightTracking::
 //            ->where("delay","0")
-        where("expired_at", "<=", $currentTime->format("Y-m-d H:i:s"))
+        where("expired_at_utc", "<=", $currentTime->format("Y-m-d H:i:s"))
             ->get();
 //        var_dump($tracksToDelete);
         $this->info($currentTime->format("Y-m-d H:i:s"));

@@ -23,7 +23,7 @@ return [
     'of' => 'з',
     'changedLang' => 'Мова встановлена',
     'inputYourDate' => "Введіть дату для перегляду рейсів",
-    'example' => "наприклад: 20.07",
+    'example' => "наприклад: :date",
     "list" => "Список",
     "listIsOver" => "Список закінчився",
     "YouAlreadyAtStart" => "Ви вже на початку списку",
@@ -35,6 +35,7 @@ return [
     "to" => "Куди: ",
     "departure_date" => "Дата відльоту: ",
     "departure_time" => "Час відльоту: ",
+    "localTime"=>"(за місцевим часом)",
     "arrival_date" => "Дата прибуття: ",
     "arrival_time" => "Час прибуття: ",
     "from_terminal" => "термінал: ",
@@ -57,5 +58,8 @@ return [
     "NoFlightsOnThisDate"=>"На цю дату відсутні рейси",
     "serverError"=>"OOOOOPS, у нас деякі проблеми із сервером",
     "thisFlightAlreadyArrived"=>"Вибачте, але цей рейс вже прибув",
-    "messageAboutDelay"=>"Рейс :number затримається на :delay",
+    "messageAboutDelay"=>"Рейс :number затримується на :delay",
+    "messageAboutTwelve"=>"Рейс :flight відправляється через 12 год о :timeDep",
+    "messageAboutThirtyMinutes"=>"Рейс :flight прибуде через 30 хв",
+    "messageAboutOneDay"=>"Рейс :flight відправляється завтра в цей час (:timeDep)"
 ];

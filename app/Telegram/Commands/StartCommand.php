@@ -24,7 +24,7 @@ class StartCommand extends UserCommand
 {
     protected $name = 'start';
     protected $usage = '/start';
-    protected $description="Start Command";
+    protected $description = "Start Command";
     protected $conversation;
 
     public function execute()
@@ -42,94 +42,128 @@ class StartCommand extends UserCommand
         $default_lang = 'ru';// На случай если будет язык по умолчанию
         $chat = Chat::find($chat_id);
 
+//        dd($chat);
 
 //       dd($params);
         $paramPieces = explode("_", $params);
         if ($paramPieces[0] == "track") {
             $date = $paramPieces[1];
             $lang = $paramPieces[2];
-            $chat->lang = $lang;
-            $chat->save();
+            $firstTime = false;
+            if (!$chat->lang) {
+                $firstTime = true;
+                $chat->lang = $lang;
+                $chat->save();
+            }
+            if ($firstTime) {
+                $keyboard = $keyboard->getMainKeyboard($chat_id);
+                $data = [
+                    'chat_id' => $chat_id,
+                    'text' => Lang::get("messages.startMessage", ["name" => $message->getFrom()->getFirstName(), "nameBot" => $message->getBotUsername()], "$chat->lang"),
+                    'reply_markup' => $keyboard,
+                ];
+
+
+                Request::sendMessage($data);
+            }
             $flight_number = $paramPieces[3];
             $status = $paramPieces[4];
 
 
-            $flight = GetApi::getOneFlight($date, $flight_number);
+            $getApi = new GetApi();
+            $flight = $getApi->getOneFlight($date, $flight_number);
+
 //            dd($flight);
-            $code = FlightHelper::GetStatus($flight, $chat->lang)->code;
-            if ($code == 2 || $code == 3) {
-                $answer_text = Lang::get("messages.thisFlightAlreadyArrived", [], "$chat->lang")."🛬";
-                $data = [
-                    'chat_id' => $chat_id,
-                    'text' => $answer_text,
-
-                ];
-                return Request::sendMessage($data);
-
-            }
-            if ($flight->delay != "0") {
-                $expired_at = date("Y-m-d H:i:s", strtotime($flight->arrival_date) + $flight->delay);
+//            dd($flight);
+            if (isset($flight["code"])) {
+                $code = $flight["code"];
             } else {
-                $expired_at = $flight->arrival_date;
+                $code = FlightHelper::GetStatus($flight, $chat->lang)->code;
             }
 
+//            dd($code);
+            if ($code == 2 || $code == 3 || $code == 404) {
+                $answer_text = Lang::get("messages.thisFlightAlreadyArrived", [], "$chat->lang");
+//                $data = [
+//                    'chat_id' => $chat_id,
+//                    'text' => $answer_text,
+////                    'show_alert' => "thumb up",
+////                    'cache_time' => 1,
+//                ];
+//                Request::sendMessage($data);
+                return $this->replyToChat($answer_text);
+//                return Request::emptyResponse();
+            }
+            if ($flight["delay"] != "0") {
+                $expired_at = date("Y-m-d H:i:s", strtotime($flight["arrival_date"]) + $flight['delay']);
+                $expired_at_utc = date("Y-m-d H:i:s", strtotime($flight["arrival_date_utc"]) + $flight['delay']);
 
+            } else {
+                $expired_at = $flight["arrival_date"];
+                $expired_at_utc = $flight["arrival_date_utc"];
+            }
+
+//            if (!$page){
+//                $page=1;
+//            }
             $createFlightTracking = FlightTracking::updateOrCreate([
                 "date" => $date,
-//                "page" => $page,
+
                 "chat_id" => $chat_id,
                 "person_id" => $message->getFrom()->getId(),
                 "flight_number" => $flight_number,
-                'carrier' => $flight->carrier,
+                'carrier' => $flight["carrier"],
             ],
                 [
-                    "fromJSON" => \GuzzleHttp\json_encode($flight->from),
-                    "toJSON" => \GuzzleHttp\json_encode($flight->to),
+                    "page" => 1,
+                    "fromJSON" => \GuzzleHttp\json_encode($flight["from"]),
+                    "toJSON" => \GuzzleHttp\json_encode($flight["to"]),
                     "status" => $status,
-                    "delay" => $flight->delay,
+                    "delay" => $flight["delay"],
                     "expired_at" => $expired_at,
-                    "departure_date" => $flight->departure_date,
-                    "arrival_date" => $flight->arrival_date,
+                    "expired_at_utc" => $expired_at_utc,
+                    "departure_date" => $flight["departure_date"],
+                    "arrival_date" => $flight["arrival_date"],
+                    "departure_date_utc" => $flight["departure_date_utc"],
+                    "arrival_date_utc" => $flight["arrival_date_utc"],
                 ]);
 
-
             if ($status == 1) {
-                $from = (array)$flight->from;
-                $to = (array)$flight->to;
+                $from = (array)$flight["from"];
+                $to = (array)$flight["to"];
                 $lang = $chat->lang;
                 if ($lang == "uk")
                     $lang = 'ua';
                 $dataToSendMessage = [
                     "chat_id" => $chat_id,
                     "text" => Lang::get("messages.answerForTrack", [], "$chat->lang") .
-                        "\n$flight->carrier-$flight_number $from[$lang]-$to[$lang]"
+                        "\n" . $flight["carrier"] . "-" . $flight_number . " " . $from[$lang] . "-" . $to[$lang]
                 ];
-             return   Request::sendMessage($dataToSendMessage);
+                Request::sendMessage($dataToSendMessage);
             }
-        }
-
-        if (!$chat->lang) {
-            $lang_menu = new LangInlineKeyboard($chat_id);
-            $lang_menu->create_inline_menu();
 
         } else {
 
-            $settings = TelegramSetting::first();
-            $settings = $settings->translate($chat->lang);
-//            $hello_text = $settings->start_message;
-            $keyboard = $keyboard->getMainKeyboard($chat_id);
-            $data = [
-                'chat_id' => $chat_id,
-                'text' => Lang::get("messages.startMessage", ["name" => $message->getFrom()->getFirstName(), "nameBot" => $message->getBotUsername()], "$chat->lang"),
-                'reply_markup' => $keyboard,
-            ];
+            if (!$chat->lang) {
+                $lang_menu = new LangInlineKeyboard($chat_id);
+                $lang_menu->create_inline_menu(1);
+
+            } else {
 
 
-           return Request::sendMessage($data);
+                $keyboard = $keyboard->getMainKeyboard($chat_id);
+                $data = [
+                    'chat_id' => $chat_id,
+                    'text' => Lang::get("messages.startMessage", ["name" => $message->getFrom()->getFirstName(), "nameBot" => $message->getBotUsername()], "$chat->lang"),
+                    'reply_markup' => $keyboard,
+                ];
 
 
+                return Request::sendMessage($data);
+
+
+            }
         }
-
 
     }
 }

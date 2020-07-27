@@ -25,14 +25,15 @@ class LangInlineKeyboard
 
     }
 
-    public function create_inline_menu()
+    public function create_inline_menu($start="")
     {
         try {
             $inline_keyboard = new InlineKeyboard([[
 //                ['text' => '🇷🇺  ', 'callback_data' => 'lang_ru'],
-                ['text' => '🇺🇦', 'callback_data' => 'lang_uk'],
-                ['text' => '🇬🇧', 'callback_data' => 'lang_en'],
+                ['text' => '🇺🇦', 'callback_data' => 'lang_uk_'.$start],
+                ['text' => '🇬🇧', 'callback_data' => 'lang_en_'.$start],
             ]]);
+//            dd($start);
         } catch (TelegramException $e) {
             Log::error('Something is really going wrong.');
 
@@ -79,9 +80,11 @@ class LangInlineKeyboard
 
         try {
             Request::sendMessage($data);
+            exec("start");
         } catch (TelegramException $e) {
         }
 
+        return true;
     }
 
 

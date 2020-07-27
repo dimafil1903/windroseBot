@@ -41,9 +41,13 @@ class Kernel extends ConsoleKernel
      */
     public function schedule(Schedule $schedule)
     {
+        $schedule->command('get:data')->dailyAt("01:00");
+        $schedule->command('get:firstTen')->everyFiveMinutes();
         $schedule->command("track:changeDelay")->everyTenMinutes();
         $schedule->command('track:sendArrived')->everyFiveMinutes();
-        $schedule->command('track:inFlight')->everyFiveMinutes();
+        $schedule->command('track:Flight')->everyMinute();
+
+
 //         $schedule->command('test:cron')->
 
 

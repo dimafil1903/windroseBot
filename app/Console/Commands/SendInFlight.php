@@ -21,7 +21,7 @@ class SendInFlight extends Command
      *
      * @var string
      */
-    protected $signature = 'track:inFlight';
+    protected $signature = 'track:Flight';
 
     /**
      * The console command description.
@@ -49,24 +49,27 @@ class SendInFlight extends Command
      */
     public function handle(PhpTelegramBotContract $telegram_bot)
     {
-        $currentTime = new DateTime('NOW', new DateTimeZone('Europe/Kiev'));
-        $thirty = $currentTime->add(new DateInterval("PT0H30M"));
+        $currentTime1 = new DateTime('NOW');
+        $currentTime2 = new DateTime('NOW');
+        $currentTime3 = new DateTime('NOW');
+        var_dump($currentTime1);
+        $thirty = $currentTime1->add(new DateInterval("PT0H30M"));
         $flightsThirty = FlightTracking::
 
-        where("expired_at", "like", $thirty->format("Y-m-d H:i") . "%")
+        where("expired_at_utc", "like", $thirty->format("Y-m-d H:i") . "%")
             ->get();
 
-        $twelve = $currentTime->add(new DateInterval("PT12H0M"));
+        $twelve = $currentTime2->add(new DateInterval("PT12H0M"));
         $flightsTwelve = FlightTracking::
 
-        where("departure_date", "like", $twelve->format("Y-m-d H:i") . "%")
+        where("departure_date_utc", "like", $twelve->format("Y-m-d H:i") . "%")
             ->get();
-        $oneDay = $currentTime->add(new DateInterval("P1D"));
+        $oneDay = $currentTime3->add(new DateInterval("P1D"));
         $flightsOneDay = FlightTracking::
 
-        where("departure_date", "like", $oneDay->format("Y-m-d H:i") . "%")
+        where("departure_date_utc", "like", $oneDay->format("Y-m-d H:i") . "%")
             ->get();
-
+        var_dump($currentTime3->format("Y-m-d H:i"));
 //        var_dump($tracksToSendMessage,$currentTime->format("Y-m-d H:i"));
         $this->templateInFlight($flightsThirty, "messages.messageAboutThirtyMinutes");
         $this->templateInFlight($flightsTwelve, "messages.messageAboutTwelve");
@@ -77,14 +80,9 @@ class SendInFlight extends Command
     public function templateInFlight($data, $message)
     {
 
-//        $this->info($currentTime->format("Y-m-d H:i:s"));
         if ($data->isNotEmpty()) {
             foreach ($data as $item) {
-//                $flight = GetApi::getOneFlight($item->date, $item->flight_number, $item->page);
-
-//                var_dump($item->from);
                 $from = (array)json_decode($item->fromJSON);
-//                var_dump($from);
                 $to = (array)json_decode($item->toJSON);
                 $chat = Chat::find($item->chat_id);
                 $lang = $chat->lang;
@@ -94,11 +92,10 @@ class SendInFlight extends Command
                 }
                 if ($item->status == 1) {
                     $chat = Chat::find($item->chat_id);
-
                     $this->info("$item->date");
                     $data = [
                         "chat_id" => $item->chat_id,
-                        "text" => " " . Lang::get($message, ["flight" => "$item->carrier-$item->flight_number " . $from["$langApi"] . "-" . $to["$langApi"], "time" => "$item->expired_at"], "$chat->lang")
+                        "text" => " " . Lang::get($message, ["flight" => "$item->carrier-$item->flight_number " . $from["$langApi"] . "-" . $to["$langApi"], "timeDep" => "$item->departure_date", "time" => "$item->expired_at"], "$chat->lang")
                     ];
                     Request::sendMessage($data);
                 }
@@ -108,6 +105,8 @@ class SendInFlight extends Command
             }
 //        $this->info("IM Start");
             Log::info("IM START log");
+        } else {
+            $this->info("EMPTY");
         }
     }
 }

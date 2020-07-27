@@ -70,11 +70,12 @@ class InlinequeryCommand extends SystemCommand
         $flightNumber = explode("-", $flightNumber);
         $flightNumberWithoutCarrier = $flightNumber[1];
 //        dd($date,$flightNumberWithoutCarrier);
-        $flight = GetApi::getOneFlight($date, $flightNumberWithoutCarrier);
+        $getApi=new GetApi();
+        $flight = $getApi->getOneFlight($date, $flightNumberWithoutCarrier);
 //        dd($flight);
 //        dd($flight);
-        if (isset($flight->code))
-            if ($flight->code == 404) {
+        if (isset($flight["code"]))
+            if ($flight["code"] == 404) {
                 Log::error("User cant find a flights in inline mode");
                 return false;
             }
@@ -83,13 +84,13 @@ class InlinequeryCommand extends SystemCommand
         $chat = Chat::find($inline_query->getFrom()->getId());
         $langAPI = $lang = $chat->lang;
 
-        $from = (array)$flight->from;
-        $to = (array)$flight->to;
+        $from = (array)$flight["from"];
+        $to = (array)$flight["to"];
 
         //$langAPI = $lang;
         if ($lang == "uk") $langAPI = "ua";
         $miniArray = [
-            ['text' => Lang::get("messages.track", [], "$lang"), 'url' => "t.me/windroseHelpBot?start=track_$date" . "_$lang" . "_$flight->flight_number" . "_1" . "_myList"],
+            ['text' => Lang::get("messages.track", [], "$lang"), 'url' => "t.me/windroseHelpBot?start=track_$date" . "_$lang" . "_".$flight["flight_number"] . "_1" . "_myList"],
         ];
         array_push($array, $miniArray);
         $inline_keyboard = new InlineKeyboard($array);
@@ -98,8 +99,8 @@ class InlinequeryCommand extends SystemCommand
                 [
                     'type' => 'article',
                     'id' => '001',
-                    'title' => $flight->carrier . "-" .
-                        $flight->flight_number . " " .
+                    'title' => $flight["carrier"] . "-" .
+                        $flight["flight_number"] . " " .
                         $from[$langAPI] . "-" .
                         $to[$langAPI],
                     "thumb_url" => asset("storage/Img/logo.jpg"),
@@ -118,6 +119,19 @@ class InlinequeryCommand extends SystemCommand
             foreach ($articles as $article) {
                 $results[] = new InlineQueryResultArticle($article);
             }
+        }else if ($query==" "){
+            $articles = [
+                [
+                    'type' => 'article',
+                    'id' => '001',
+                    'title' => "Hello",
+                    "thumb_url" => asset("storage/Img/logo.jpg"),
+                    'description' => "hello",
+                ],
+            ];
+            $results[] = new InlineQueryResultArticle($articles[0]);
+            $data['results'] = '[' . implode(',', $results) . ']';
+            Request::answerInlineQuery($data);
         }
 
         $data['results'] = '[' . implode(',', $results) . ']';

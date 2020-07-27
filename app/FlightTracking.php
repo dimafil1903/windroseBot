@@ -20,6 +20,8 @@ class FlightTracking extends Model
         "page",
         "departure_date",
         "arrival_date",
+        "departure_date_utc",
+        "arrival_date_utc",
         'status',
         'delay_send',
         'carrier',
@@ -27,6 +29,7 @@ class FlightTracking extends Model
         'toJSON',
         'delay',
         'expired_at',
+        'expired_at_utc',
 
     ];
 }

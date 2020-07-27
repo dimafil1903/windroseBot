@@ -7,6 +7,8 @@ namespace App\Telegram\keyboards;
 use App\Chat;
 use App\FlightTracking;
 use App\Telegram\Helpers\FlightHelper;
+use DateTime;
+use DateTimeZone;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use Longman\TelegramBot\Entities\InlineKeyboard;
@@ -21,32 +23,47 @@ class CreateInlineKeyboard
         $this->chat_id = $chat_id;
     }
 
-    public function createFlightsList($data)
+    public function createFlightsList($data,$current_page="")
     {
         $chat = Chat::find($this->chat_id);
         $array = [];
+
         if (isset($data->code))
-        return false;
+            if ($data->code != "0")
+                return false;
 //        if (isset($date->date))
-        $date = $data->date;
-        $current_page = $data->current_page;
+//        dd($data["date"]);
+        $date = $data["date"];
+//        dd($date);
+//        $current_page = $data->current_page;
+        if (!$current_page) $current_page=1;
+
 //        $last_page=$data->last_page;
         $prev = $current_page - 1;
         $next = $current_page + 1;
-        foreach ($data->data as $datum) {
-            $from = (array)$datum->from;
-            $to = (array)$datum->to;
+        $data=(object)$data;
+        $flights= $data["flights"]->forPage($current_page, 10);
+        foreach ($flights as $datum) {
+            $from = (array)$datum["from"];
+            $to = (array)$datum["to"];
             $lang = "en";
             if ($chat->lang == "uk") {
                 $lang = "ua";
             }
+            $time = new DateTime($datum["departure_date"]);
+            $time = $time->format("H:i");
+            $time2 = new DateTime($datum["arrival_date"]);
+            $time2 = $time2->format("H:i");
+//            dd($date);
             array_push($array,
                 [['text' =>
-                    $datum->carrier . "-" .
-                    $datum->flight_number . " " .
+//                    $datum->carrier . "-" .
+//                    $datum->flight_number . " " .
+                    $time . "-" .
+                    $time2 . " " .
                     $from[$lang] . "-" .
                     $to[$lang],
-                    'callback_data' => "flight_$datum->flight_number" . "_$date" . "_$current_page"]]);
+                    'callback_data' => "flight_".$datum["flight_number"]. "_$date" . "_$current_page"]]);
         }
 
 
@@ -71,7 +88,7 @@ class CreateInlineKeyboard
             $flightInDB = FlightTracking::where('page', $page)
                 ->where("date", $date)
                 ->where("chat_id", $this->chat_id)
-                ->where("flight_number", $flight->flight_number)
+                ->where("flight_number", $flight["flight_number"])
                 ->first();
             $isEnabled = "";
             $track = Lang::get("messages.track", [], "$lang");
@@ -90,17 +107,17 @@ class CreateInlineKeyboard
             $keyboard = [];
 //            dd(FlightHelper::GetStatus($flight)->code);
             if (FlightHelper::GetStatus($flight, $lang)->code !== 2 && FlightHelper::GetStatus($flight, $lang)->code !== 3) {
-                if ($type=="myList") {
-                    array_push($keyboard, [['text' => $track . " $isEnabled", 'callback_data' => "track_$date" . "_$page" . "_$flight->flight_number" . "_$status" . "_myList"]]);
-                }elseif ($type == "list"){
-                    array_push($keyboard, [['text' => $track . " $isEnabled", 'callback_data' => "track_$date" . "_$page" . "_$flight->flight_number" . "_$status" ]]);
+                if ($type == "myList") {
+                    array_push($keyboard, [['text' => $track . " $isEnabled", 'callback_data' => "track_$date" . "_$page" . "_".$flight["flight_number"] . "_$status" . "_myList"]]);
+                } elseif ($type == "list") {
+                    array_push($keyboard, [['text' => $track . " $isEnabled", 'callback_data' => "track_$date" . "_$page" . "_".$flight["flight_number"] . "_$status"]]);
 
                 }
-                }
-            array_push($keyboard, [['text' => Lang::get("messages.share", [], "$lang"), 'switch_inline_query' => "$flight->carrier-$flight->flight_number $date"]]);
+            }
+            array_push($keyboard, [['text' => Lang::get("messages.share", [], "$lang"), 'switch_inline_query' => $flight["carrier"]."-".$flight["flight_number"]." $date"]]);
             if ($type == "list") {
                 array_push($keyboard, [['text' => Lang::get("messages.backToList", [], "$lang"), 'callback_data' => "backToFlightList_$date" . "_$page"]]);
-            }else if ($type=="myList"){
+            } else if ($type == "myList") {
                 array_push($keyboard, [['text' => Lang::get("messages.backToList", [], "$lang"), 'callback_data' => "backToMyFlightList"]]);
 
             }
@@ -137,7 +154,7 @@ class CreateInlineKeyboard
                     $datum->flight_number . " " .
                     $from["$lang"] . "-" .
                     $to["$lang"],
-                    'callback_data' => "flight_$datum->flight_number" . "_$datum->date" . "_$datum->page"."_myList"]]);
+                    'callback_data' => "flight_$datum->flight_number" . "_$datum->date" . "_$datum->page" . "_myList"]]);
         }
 
 
@@ -156,7 +173,8 @@ class CreateInlineKeyboard
         return $inline_keyboard;
     }
 
-    public function CreateMyListButton(){
+    public function CreateMyListButton()
+    {
 
     }
 }

@@ -51,32 +51,37 @@ class TrackingFlights extends Command
      */
     public function handle(PhpTelegramBotContract $telegram_bot)
     {
-        $tracksWithDelay = FlightTracking::where("date", date("Y-m-d "))->where("status", 1)->get();
+
+        $tracksWithDelay = FlightTracking::where("date", date("Y-m-d"))->where("status", 1)->get();
+//       dd($tracksWithDelay);
+        $getApi = new GetApi();
         foreach ($tracksWithDelay as $item) {
-            $flight = GetApi::getOneFlight($item->date,  $item->flight_number,$item->page);
-            if ($flight->delay !== "0") {
-                if ($item->delay !== $flight->delay) {
+
+            $flight = $getApi->getOneFlight($item->date, $item->flight_number);
+            if ($flight["delay"] !== "0") {
+                if ($item->delay !== $flight["delay"]) {
 
                     var_dump($flight);
-                    $chat=Chat::find($item->chat_id);
+                    $chat = Chat::find($item->chat_id);
                     $this->info("$item->date");
                     $data = [
                         "chat_id" => $item->chat_id,
 
-                        "text" => Lang::get("messages.messageAboutDelay", ["number" =>$flight->carrier."-".$flight->flight_number, "delay" =>  gmdate("H:i", (int)$flight->delay)], "$chat->lang")
+                        "text" => Lang::get("messages.messageAboutDelay", ["number" => $item->carrier . "-" . $item->flight_number, "delay" => gmdate("H:i", (int)$flight["delay"])], "$chat->lang")
 
                     ];
                     Request::sendMessage($data);
 
                     $flightUpdate = FlightTracking::find($item->id);
-                    $flightUpdate->delay = $flight->delay;
+                    $flightUpdate->delay = $flight["delay"];
                     $flightUpdate->delay_send++;
-                    $flightUpdate->expired_at=date("Y-m-d H:i:s",strtotime($flightUpdate->expired_at)+$flight->delay);
+                    $flightUpdate->expired_at = date("Y-m-d H:i:s", strtotime($flightUpdate["expired_at"]) + $flight["delay"]);
+                    $flightUpdate->expired_at_utc = date("Y-m-d H:i:s", strtotime($flightUpdate["expired_at_utc"]) + $flight["delay"]);
                     $flightUpdate->save();
                 }
             }
         }
 //        $this->info("IM Start");
-        Log::info("IM START log");
+        $this->info("IM START log");
     }
 }
