@@ -54,4 +54,20 @@ class FlightHelper
         return date("H:i", $arrival - $departure);
     }
 
+    static function telegram_config($key, $lang)
+    {
+        $config= \App\TelegramConfig::where('key',$key)->first();
+        $config = $config->translate($lang);
+        return $config->value;
+    }
+
+
+   static  function telegram_config_no_translate($key)
+    {
+        $config= \App\TelegramConfig::where('key',$key)->first();
+
+        return $config->value;
+    }
+
+
 }

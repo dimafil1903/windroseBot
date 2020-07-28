@@ -21,15 +21,17 @@ Route::get('/', function () {
     Route::post('hook', 'TelegramController@hook');
     Route::get('info', 'TelegramController@info');
     Route::get('check', 'SendMessage@check');
-
-
-
+//    Route::post("viberhook","ViberBotController@index");
+//    Route::get('setviber', 'ViberBotController@set');
+//    Route::get('unsetviber', 'TelegramController@unset');
+//    Route::post('hookviber', 'TelegramController@hook');
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
     Route::group(['prefix' => 'telegram'], function () {
         Route::get('index', 'SendMessage@index');
         Route::post('send', 'SendMessage@send');
     });
+
     Route::group([   'as'     => 'telegram-config.','prefix' => 'telegram-config'], function ()   {
 
         Route::get('/', ['uses' =>'TelegramSettingsController@index',        'as' => 'index']);

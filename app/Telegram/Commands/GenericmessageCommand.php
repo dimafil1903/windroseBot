@@ -25,7 +25,7 @@ use App\Telegram\keyboards\LangInlineKeyboard;
 
 use DateTime;
 use DateTimeZone;
-
+use App\Telegram\Helpers;
 use Illuminate\Support\Facades\Lang;
 use Longman\TelegramBot\Commands\SystemCommand;
 use Longman\TelegramBot\Conversation;
@@ -117,13 +117,13 @@ class GenericmessageCommand extends SystemCommand
         /**
          * BACK BUTTON
          */
-        $prefix = telegram_config('buttons.pref_back_menu', $chat->lang);
+        $prefix = Helpers\FlightHelper::telegram_config('buttons.pref_back_menu', $chat->lang);
         if (!$prefix) {
             $prefix = '';
         } else {
             $prefix = $prefix . ' ';
         }
-        $postfix = telegram_config('buttons.post_back_menu', $chat->lang);;
+        $postfix = Helpers\FlightHelper::telegram_config('buttons.post_back_menu', $chat->lang);;
         if (!$postfix) {
             $postfix = '';
         } else {
