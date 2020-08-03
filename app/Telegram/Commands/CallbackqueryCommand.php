@@ -260,7 +260,7 @@ class CallbackqueryCommand extends SystemCommand
 
             $createFlightTracking = FlightTracking::updateOrCreate([
                 "date" => $date,
-
+                "type"=>"telegram",
                 "chat_id" => $chat_id,
                 "person_id" => $callback_query->getFrom()->getId(),
                 "flight_number" => $flight_number,

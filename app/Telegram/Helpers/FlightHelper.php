@@ -20,6 +20,8 @@ class FlightHelper
         $status = "";
 //        $currentTime=strtotime(date("Y-m-d H:i:s"));
         $code = 0;
+
+//        dd($flight);
         if ($flight["delay"] == "0") {
             $status = Lang::get("messages.scheduled", [], "$lang");
             $code = 0;
@@ -33,11 +35,11 @@ class FlightHelper
             $code = 1;
         }
         if ($code == 2 && $flight["delay"] != "0") {
-            $status = Lang::get("messages.arrived", [], "$lang") . ", " . Lang::get("messages.delay", [], "$lang") . ": +" . date("H:i", $flight->delay);
+            $status = Lang::get("messages.arrived", [], "$lang") . ", " . Lang::get("messages.delay", [], "$lang") . ": +" . date("H:i", $flight["delay"]);
             $code = 3;
         }
         if ($code == 1 && $flight["delay"] != "0") {
-            $status = Lang::get("messages.inFlight", [], "$lang") . ", " . Lang::get("messages.delay", [], "$lang") . ": +" . date("H:i", $flight->delay);
+            $status = Lang::get("messages.inFlight", [], "$lang") . ", " . Lang::get("messages.delay", [], "$lang") . ": +" . date("H:i", $flight["delay"]);
             $code = 4;
         }
         return (object)["message" => $status, "code" => $code];

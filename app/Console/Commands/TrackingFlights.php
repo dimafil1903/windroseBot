@@ -6,6 +6,8 @@ use App\Chat;
 use App\FlightTracking;
 use App\Telegram\Helpers\GetApi;
 use App\User;
+use App\Viber\Keyboards\MainMenu;
+use App\ViberUser;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -14,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Longman\TelegramBot\Exception\TelegramException;
 use Longman\TelegramBot\Request;
+use Paragraf\ViberBot\Client;
 use PhpTelegramBot\Laravel\PhpTelegramBotContract;
 
 class TrackingFlights extends Command
@@ -52,26 +55,39 @@ class TrackingFlights extends Command
     public function handle(PhpTelegramBotContract $telegram_bot)
     {
 
-        $tracksWithDelay = FlightTracking::where("date", date("Y-m-d"))->where("status", 1)->get();
+        $tracksWithDelay = FlightTracking::where("status", 1)->get();
 //       dd($tracksWithDelay);
         $getApi = new GetApi();
         foreach ($tracksWithDelay as $item) {
 
             $flight = $getApi->getOneFlight($item->date, $item->flight_number);
-            if ($flight["delay"] !== "0") {
+            $this->info(json_encode($flight));
+
                 if ($item->delay !== $flight["delay"]) {
 
-                    var_dump($flight);
-                    $chat = Chat::find($item->chat_id);
+
+                    if (($item->type=="telegram") ) {
+                        $chat = Chat::find($item->chat_id);
+                    }elseif ($item->type=="viber"){
+                        $chat = ViberUser::where('user_id',$item->chat_id)->first();
+                    }
                     $this->info("$item->date");
-                    $data = [
-                        "chat_id" => $item->chat_id,
+                    $text=Lang::get("messages.messageAboutDelay", ["number" => $item->carrier . "-" . $item->flight_number, "delay" => gmdate("H:i", (int)$flight["delay"])], "$chat->lang");
 
-                        "text" => Lang::get("messages.messageAboutDelay", ["number" => $item->carrier . "-" . $item->flight_number, "delay" => gmdate("H:i", (int)$flight["delay"])], "$chat->lang")
+                    if ($item->type=="telegram") {
+                        $data = [
+                            "chat_id" => $item->chat_id,
 
-                    ];
-                    Request::sendMessage($data);
+                            "text" => $text
+                        ];
+                        Request::sendMessage($data);
+                    }elseif ($item->type=="viber"){
 
+                        $keyboard= new MainMenu();
+                        $keyboard= $keyboard->getKeyboard("$chat->lang");
+                        $keyboard= $keyboard->getKeyboard();
+                        (new Client())->broadcast($text, ViberUser::where('user_id',"$item->chat_id")->get(),$keyboard);
+                    }
                     $flightUpdate = FlightTracking::find($item->id);
                     $flightUpdate->delay = $flight["delay"];
                     $flightUpdate->delay_send++;
@@ -79,7 +95,7 @@ class TrackingFlights extends Command
                     $flightUpdate->expired_at_utc = date("Y-m-d H:i:s", strtotime($flightUpdate["expired_at_utc"]) + $flight["delay"]);
                     $flightUpdate->save();
                 }
-            }
+
         }
 //        $this->info("IM Start");
         $this->info("IM START log");

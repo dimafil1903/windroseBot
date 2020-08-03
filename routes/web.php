@@ -16,14 +16,18 @@ Route::get('/', function () {
 });
 
 
-    Route::get('unset', 'TelegramController@unset');
-    Route::get('set', 'TelegramController@set');
-    Route::post('hook', 'TelegramController@hook');
-    Route::get('info', 'TelegramController@info');
+
+
+      Route::get('unset', 'TelegramController@unset');
+      Route::get('set', 'TelegramController@set');
+      Route::post('hooktg', 'TelegramController@hook');
+      Route::get('info', 'TelegramController@info');
+
+
     Route::get('check', 'SendMessage@check');
-//    Route::post("viberhook","ViberBotController@index");
-//    Route::get('setviber', 'ViberBotController@set');
-//    Route::get('unsetviber', 'TelegramController@unset');
+    Route::post("hook","ViberBotController@hook");
+    Route::get('setviber', 'ViberBotController@set');
+    Route::get('unsetviber', 'ViberBotController@unset');
 //    Route::post('hookviber', 'TelegramController@hook');
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();

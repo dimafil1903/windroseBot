@@ -15,6 +15,7 @@ class FlightTracking extends Model
     protected $fillable = [
         "flight_number",
         "date",
+        "type",
         "chat_id",
         "person_id",
         "page",

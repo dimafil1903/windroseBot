@@ -10,14 +10,13 @@
     "require": {
         "php": "^7.1.3",
         "admitad/api": "^0.1.4",
-
         "fideloper/proxy": "^4.0",
         "generate-migrations-hook": "^0.1.3@beta",
         "guzzlehttp/guzzle": "~6.0",
         "laravel/framework": "5.8.*",
         "laravel/tinker": "^1.0",
         "maatwebsite/excel": "^3.1",
-
+        "paragraf-lex/viber-bot": "^0.0.7",
         "php-telegram-bot/laravel": "^0.0.1",
         "symfony/psr-http-message-bridge": "^1.1",
         "tcg/voyager": "^1.3"

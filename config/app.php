@@ -168,6 +168,8 @@ return [
         TCG\Voyager\VoyagerServiceProvider::class,
         Larapack\VoyagerHooks\VoyagerHooksServiceProvider::class,
         Maatwebsite\Excel\ExcelServiceProvider::class,
+        Paragraf\ViberBot\ViberBotServiceProvider::class,
+
         /*
          * Application Service Providers...
          */

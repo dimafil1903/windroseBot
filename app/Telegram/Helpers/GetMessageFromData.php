@@ -20,7 +20,7 @@ class GetMessageFromData
         $to = (array)$flight["to"];
         $fleet = (array)$flight["fleet"];
 //        dd($flight);
-        $text = "#️⃣" . Lang::get("messages.flight_number", [], "$lang") . $flight['carrier']."-".$flight["flight_number"];
+        $text = "✈️" . Lang::get("messages.flight_number", [], "$lang") . $flight['carrier']."-".$flight["flight_number"];
         $text .= "\n〰〰〰〰〰〰〰〰";
         $text .= "\n🏙" . Lang::get("messages.from", [], "$lang") . $from["$langForApi"] . "  ";
         if (!empty($flight["from_terminal"])) {
@@ -36,7 +36,7 @@ class GetMessageFromData
         $text .= "\n📆" . Lang::get("messages.arrival_date", [], "$lang") . date("d.m.Y", strtotime($flight['arrival_date'])) ;
         $text .= "\n🕐" . Lang::get("messages.arrival_time", [], "$lang") . date("H:i", strtotime($flight['arrival_date']))." ".
             Lang::get("messages.localTime", [], "$lang");;
-        $text .= "\n⌚" . Lang::get("messages.timeInFlight", [], "$lang") . FlightHelper::GetTimeInFlight($flight);
+        $text .= "\n⏳" . Lang::get("messages.timeInFlight", [], "$lang") . FlightHelper::GetTimeInFlight($flight);
         $text .= "\n〰〰〰〰〰〰〰〰";
         $text .= "\n👀" . Lang::get("messages.status", [], "$lang") . FlightHelper::GetStatus($flight, $lang)->message;
 

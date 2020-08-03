@@ -6,6 +6,8 @@ use App\Chat;
 use App\FlightTracking;
 use App\Telegram\Helpers\GetApi;
 use App\User;
+use App\Viber\Keyboards\MainMenu;
+use App\ViberUser;
 use DateTime;
 use DateTimeZone;
 use Illuminate\Console\Command;
@@ -16,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Longman\TelegramBot\Exception\TelegramException;
 use Longman\TelegramBot\Request;
+use Paragraf\ViberBot\Client;
 use PhpTelegramBot\Laravel\PhpTelegramBotContract;
 
 class SendAndDeleteArrived extends Command
@@ -57,6 +60,7 @@ class SendAndDeleteArrived extends Command
         $tracksToDelete = FlightTracking::
 //            ->where("delay","0")
         where("expired_at_utc", "<=", $currentTime->format("Y-m-d H:i:s"))
+
             ->get();
 //        var_dump($tracksToDelete);
         $this->info($currentTime->format("Y-m-d H:i:s"));
@@ -75,14 +79,24 @@ class SendAndDeleteArrived extends Command
                     $langApi="ua";
                 }
                 if ($item->status == 1) {
-                    $chat = Chat::find($item->chat_id);
+                    $text=" " . Lang::get("messages.messageAboutArrived", ["flight" => "$item->carrier-$item->flight_number " . $from["$langApi"] . "-" . $to["$langApi"], "time" => "$item->expired_at"], "$chat->lang");
+                    if ($item->type=="telegram") {
 
-                    $this->info("$item->date");
-                    $data = [
-                        "chat_id" => $item->chat_id,
-                        "text" =>   " " . Lang::get("messages.messageAboutArrived", ["flight"=>"$item->carrier-$item->flight_number ". $from["$langApi"]."-".$to["$langApi"],"time"=>"$item->expired_at"], "$chat->lang")
-                    ];
-                    Request::sendMessage($data);
+
+                        $this->info("$item->date");
+                        $data = [
+                            "chat_id" => $item->chat_id,
+                            "text" =>   $text ];
+                        Request::sendMessage($data);
+                    }elseif ($item->type=="viber"){
+
+                        $keyboard= new MainMenu();
+                        $keyboard= $keyboard->getKeyboard($lang);
+                        $keyboard= $keyboard->getKeyboard();
+                        $users=ViberUser::where('user_id',"$item->chat_id")->get();
+                        (new Client())->broadcast($text, $users->toArray(),$keyboard);
+
+                   }
                 }
                 FlightTracking::destroy($item->id);
 
