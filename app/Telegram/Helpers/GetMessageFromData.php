@@ -13,7 +13,7 @@ class GetMessageFromData
     static function generateCard($flight, $lang)
     {
         $langForApi = $lang;
-        if ($lang == "uk") {
+        if ($langForApi == "uk") {
             $langForApi = "ua";
         }
         $from = (array)$flight["from"];
@@ -38,8 +38,8 @@ class GetMessageFromData
             Lang::get("messages.localTime", [], "$lang");;
         $text .= "\n⏳" . Lang::get("messages.timeInFlight", [], "$lang") . FlightHelper::GetTimeInFlight($flight);
         $text .= "\n〰〰〰〰〰〰〰〰";
-        $text .= "\n👀" . Lang::get("messages.status", [], "$lang") . FlightHelper::GetStatus($flight, $lang)->message;
-
+        $text .= "\n👀" . Lang::get("messages.status", [], "$lang") . (FlightHelper::GetStatus($flight, "$lang"))->message;
+//        dd((FlightHelper::GetStatus($flight, "$lang"))->message);
         return $text;
     }
 }

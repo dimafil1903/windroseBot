@@ -7,7 +7,6 @@ namespace App\Viber\Keyboards;
 use App\FlightTracking;
 use App\Telegram\Helpers\FlightHelper;
 use Illuminate\Support\Facades\Lang;
-use Illuminate\Support\Facades\Log;
 use Paragraf\ViberBot\Model\Button;
 use Paragraf\ViberBot\Model\Keyboard;
 
@@ -45,7 +44,7 @@ class FlightKeyboard
 
                 array_push($buttons, (
                 new Button("", ""))
-                    ->setText("<font color='#FFFFFF'>".$track . " $isEnabled"."</font>")
+                    ->setText("<font color='#FFFFFF'>" . $track . " $isEnabled" . "</font>")
                     ->setSilent(true)
                     ->setActionBody("track_$date" . "_$page" . "_" . $flight["flight_number"] . "_$status" . "_myList")
                     ->setActionType('reply')
@@ -54,7 +53,7 @@ class FlightKeyboard
                 );
             } elseif ($type == "list") {
                 array_push($buttons, (new Button("", ""))
-                    ->setText("<font color='#FFFFFF'>".$track . " $isEnabled"."</font>")
+                    ->setText("<font color='#FFFFFF'>" . $track . " $isEnabled" . "</font>")
                     ->setSilent(true)
                     ->setActionBody("track_$date" . "_$page" . "_" . $flight["flight_number"] . "_$status")
                     ->setActionType('reply')
@@ -68,7 +67,7 @@ class FlightKeyboard
         if ($type == "list") {
 //                array_push($keyboard, [['text' => Lang::get("messages.backToList", [], "$lang"), 'callback_data' => "backToFlightList_$date" . "_$page"]]);
             array_push($buttons, (new Button("", ""))
-                ->setText("<font color='#FFFFFF'>".Lang::get("messages.backToList", [], $lang)."</font>")
+                ->setText("<font color='#FFFFFF'>" . Lang::get("messages.backToList", [], $lang) . "</font>")
                 ->setSilent(true)
                 ->setActionBody("backToFlightList_$date" . "_$page" . "_$FieldState")
                 ->setActionType('reply')
@@ -78,9 +77,9 @@ class FlightKeyboard
         } else if ($type == "myList") {
 //                array_push($keyboard, [['text' => Lang::get("messages.backToList", [], "$lang"), 'callback_data' => "backToMyFlightList"]]);
             array_push($buttons, (new Button("", ""))
-                ->setText("<font color='#FFFFFF'>".Lang::get("messages.backToList", [], $lang)."</font>")
+                ->setText("<font color='#FFFFFF'>" . Lang::get("messages.backToList", [], $lang) . "</font>")
                 ->setSilent(true)
-                ->setActionBody("BackToMyList"."_$page")
+                ->setActionBody("BackToMyList" . "_$page")
                 ->setActionType('reply')
                 ->setBgColor("#8176d6")
                 ->setTextSize("large")

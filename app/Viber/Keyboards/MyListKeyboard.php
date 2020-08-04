@@ -36,6 +36,21 @@ class MyListKeyboard
 
 //        dd($date);
 //        $current_page = $data->current_page;
+        $chat = ViberUser::where("user_id", $chat_id)->first();
+        if ($data->isEmpty()){
+            $buttons[] = (new Button("reply",
+                "BackToSchedule",
+                "<font color='#FFFFFF'>" .
+                Lang::get('messages.back', [], $chat->lang) .
+                "</font>",
+                "regular"))
+                ->setColumns(6)
+                ->setRows(1)
+                ->setBgColor("#8176d6");
+            return $buttons;
+        }
+
+
         if (!$current_page) $current_page = 1;
 
         if (isset($data["last_page"])) {
@@ -56,7 +71,7 @@ class MyListKeyboard
 //       Log::emergency(\GuzzleHttp\json_encode($data));
         $flights = $data->forPage($current_page, 10);
         $buttons = [];
-        $chat = ViberUser::where("user_id", $chat_id)->first();
+
         $lang = "en";
         if ($chat->lang == "uk") {
             $lang = "ua";
@@ -119,7 +134,9 @@ class MyListKeyboard
     {
 
 
-        $usersTracksFlights = FlightTracking::where("status", 1)->where('chat_id', $this->chat_id)->get();
+        $usersTracksFlights = FlightTracking::where("status", 1)
+            ->where('type','viber')
+            ->where('chat_id', $this->chat_id)->get();
 
        $buttons= $this->getButtons($usersTracksFlights,$chat_id,$current_page);
 

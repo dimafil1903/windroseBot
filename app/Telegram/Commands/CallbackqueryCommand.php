@@ -95,8 +95,8 @@ class CallbackqueryCommand extends SystemCommand
             if (isset($callbackPiece[1])) $date = $callbackPiece[1];
             if (isset($callbackPiece[2])) $page = $callbackPiece[2];
 
-            if ($page<=0) $page=1;
-            $getApi=new GetApi();
+            if ($page <= 0) $page = 1;
+            $getApi = new GetApi();
             $fligtsData = $getApi->getFlightsByDate($date, $page);
             if (isset($fligtsData->code)) {
                 if ($fligtsData->code == 404) {
@@ -112,10 +112,10 @@ class CallbackqueryCommand extends SystemCommand
                     return Request::deleteMessage($data);
                 }
             }
-            $keyboard = $flightsList->createFlightsList($fligtsData,$page);
-            if (!$keyboard){
+            $keyboard = $flightsList->createFlightsList($fligtsData, $page);
+            if (!$keyboard) {
                 $answer_text = Lang::get("messages.ServerError", [], "$chat->lang");
-                $data['text']=$answer_text;
+                $data['text'] = $answer_text;
                 return Request::sendMessage($data);
             }
             $data = array(
@@ -123,9 +123,9 @@ class CallbackqueryCommand extends SystemCommand
                 "message_id" => $callback_message_id,
                 "reply_markup" => $keyboard,
             );
-            $lastPage=$getApi->getLastPage();
+            $lastPage = $getApi->getLastPage();
             if (isset($page) && $lastPage) {
-                $answer_text = Lang::get("messages.list", [], "$chat->lang") . " $page " . Lang::get("messages.of", [], "$chat->lang") . " ".$lastPage;
+                $answer_text = Lang::get("messages.list", [], "$chat->lang") . " $page " . Lang::get("messages.of", [], "$chat->lang") . " " . $lastPage;
 
                 $data["text"] = ConvertDate::ConvertToWordMonth($date, $chat->lang) . "\n" . $answer_text;
 
@@ -140,14 +140,12 @@ class CallbackqueryCommand extends SystemCommand
 
             Request::editMessageReplyMarkup($data);
             Request::editMessageText($data);
-        }
-
-        elseif ($callbackPiece[0] == 'flight') {
+        } elseif ($callbackPiece[0] == 'flight') {
             $number = $callbackPiece[1];
             $date = $callbackPiece[2];
             $page = $callbackPiece[3];
 //            $answer_text = $callback_data;
-            $getApi=new GetApi();
+            $getApi = new GetApi();
             $fligtsData = $getApi->getFlightsByDate($date, $page);
 //            dd($fligtsData);
             if (isset($fligtsData->code)) {
@@ -168,7 +166,7 @@ class CallbackqueryCommand extends SystemCommand
                         "chat_id" => $chat_id,
                         "text" => $answer_text
                     ];
-                      $this->returnAnswerText($callback_query_id, $answer_text);
+                    $this->returnAnswerText($callback_query_id, $answer_text);
                     return Request::sendMessage($data);
                 }
 
@@ -197,17 +195,15 @@ class CallbackqueryCommand extends SystemCommand
             }
         }
         if ($callback_data == "backToMyFlightList") {
-//            dd("DD");
             $usersTracksFlights = FlightTracking::
             where("status", 1)
                 ->where('chat_id', $chat_id)->get();
-
-
             if ($usersTracksFlights->isEmpty()) {
                 $data = [
                     "chat_id" => $chat_id,
                     "text" => Lang::get("messages.emptyFlightsList", [], "$chat->lang"),
                 ];
+                Request::sendMessage($data);
             } else {
                 $keyboard = new CreateInlineKeyboard($chat_id);
                 $keyboard = $keyboard->createMyFlightsList($usersTracksFlights);
@@ -229,7 +225,7 @@ class CallbackqueryCommand extends SystemCommand
             $status = $callbackPiece[4];
 
 
-            $getApi=new GetApi();
+            $getApi = new GetApi();
             $flight = $getApi->getOneFlight($date, $flight_number, $page);
 
 //            dd($flight);
@@ -254,13 +250,13 @@ class CallbackqueryCommand extends SystemCommand
                 $expired_at_utc = $flight["arrival_date_utc"];
             }
 
-            if (!$page){
-                $page=1;
+            if (!$page) {
+                $page = 1;
             }
 
             $createFlightTracking = FlightTracking::updateOrCreate([
                 "date" => $date,
-                "type"=>"telegram",
+                "type" => "telegram",
                 "chat_id" => $chat_id,
                 "person_id" => $callback_query->getFrom()->getId(),
                 "flight_number" => $flight_number,
@@ -303,7 +299,7 @@ class CallbackqueryCommand extends SystemCommand
                 $dataToSendMessage = [
                     "chat_id" => $chat_id,
                     "text" => Lang::get("messages.answerForTrack", [], "$chat->lang") .
-                        "\n".$flight["carrier"]."-".$flight_number." ". $from[$lang]."-".$to[$lang]
+                        "\n" . $flight["carrier"] . "-" . $flight_number . " " . $from[$lang] . "-" . $to[$lang]
                 ];
                 Request::sendMessage($dataToSendMessage);
             }
@@ -317,21 +313,21 @@ class CallbackqueryCommand extends SystemCommand
          */
         if ($callbackPiece[0] == 'lang') {
 
-                if (isset($callbackPiece[1])) {
-                    $lang = $callbackPiece[1];
-                }
-            $onStart="";
-                if (isset($callbackPiece[2])) {
-                    $onStart = $callbackPiece[2];
-                }
+            if (isset($callbackPiece[1])) {
+                $lang = $callbackPiece[1];
+            }
+            $onStart = "";
+            if (isset($callbackPiece[2])) {
+                $onStart = $callbackPiece[2];
+            }
 
 //                dd($onStart);
             $lang_menu = new LangInlineKeyboard($chat_id);
             if (isset($lang)) {
                 $lang_menu->set($lang, $callback_message_id);
             }
-            if ($onStart=="1"){
-                $chat=Chat::find($chat_id);
+            if ($onStart == "1") {
+                $chat = Chat::find($chat_id);
                 $data = [
                     'chat_id' => $chat_id,
                     'text' => Lang::get("messages.startMessage", ["name" => $callback_query->getFrom()->getFirstName(), "nameBot" => $callback_query->getBotUsername()], "$chat->lang"),

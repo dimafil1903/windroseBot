@@ -91,6 +91,9 @@ class SendInFlight extends Command
                 $from = (array)json_decode($item->fromJSON);
                 $to = (array)json_decode($item->toJSON);
                 $chat = Chat::find($item->chat_id);
+                if ($item->type=="viber"){
+                    $chat=ViberUser::where('user_id',"$item->chat_id")->first();
+                }
                 $lang = $chat->lang;
                 $langApi = $lang;
                 if ($lang == "uk") {
@@ -99,7 +102,7 @@ class SendInFlight extends Command
                 if ($item->status == 1) {
                     $text=" " . Lang::get($message, ["flight" => "$item->carrier-$item->flight_number " . $from["$langApi"] . "-" . $to["$langApi"], "timeDep" => "$item->departure_date", "time" => "$item->expired_at"], "$chat->lang");
                     if ($item->type=="telegram") {
-                        $chat = Chat::find($item->chat_id);
+//                        $chat = Chat::find($item->chat_id);
                         $this->info("$item->date");
                         $data = [
                             "chat_id" => $item->chat_id,

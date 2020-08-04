@@ -29,6 +29,7 @@ class Kernel extends ConsoleKernel
         TrackingFlights::class,
         SendAndDeleteArrived::class,
         SendInFlight::class,
+        Commands\Viber\getLastMessageOnline::class,
     ];
     public $distribution;
 
@@ -46,6 +47,7 @@ class Kernel extends ConsoleKernel
         $schedule->command("track:changeDelay")->everyTenMinutes();
         $schedule->command('track:sendArrived')->everyFiveMinutes();
         $schedule->command('track:Flight')->everyMinute();
+        $schedule->command("viber:getOnline")->everyFiveMinutes();
     }
 
 
