@@ -4,8 +4,6 @@
 namespace App\Viber;
 
 
-use Illuminate\Support\Facades\Log;
-
 class ViberBot
 {
 
@@ -64,9 +62,9 @@ class ViberBot
         $object = new $name($this->request);
         if (method_exists($object, "execute")) {
             $object->execute();
-            Log::debug(\GuzzleHttp\json_encode($event));
+//            Log::debug(\GuzzleHttp\json_encode($event));
         } else {
-            Log::error("$name NO Command ");
+//            Log::error("$name NO Command ");
         }
     }
 }

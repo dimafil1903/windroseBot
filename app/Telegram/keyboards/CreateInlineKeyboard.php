@@ -59,10 +59,8 @@ class CreateInlineKeyboard
                 [['text' =>
 //                    $datum->carrier . "-" .
 //                    $datum->flight_number . " " .
-                    $time . "-" .
-                    $time2 . " " .
-                    $from[$lang] . "-" .
-                    $to[$lang],
+                    $from[$lang] . " $time - " .
+                    $to[$lang]." ".$time2 ,
                     'callback_data' => "flight_".$datum["flight_number"]. "_$date" . "_$current_page"]]);
         }
 

@@ -9,7 +9,7 @@ use App\ViberConversationStarted;
 use App\ViberMessages;
 use App\ViberUser;
 use Illuminate\Support\Facades\Log;
-use Paragraf\ViberBot\Event\ConversationStartedEvent;
+
 
 class DB extends ViberBot
 {
@@ -17,8 +17,9 @@ class DB extends ViberBot
 
     public function startedConversation()
     {
+
         $user = new \Paragraf\ViberBot\Model\ViberUser($this->getRequest()->user['id'], $this->getRequest()->user['name']);
-        Log::alert(\GuzzleHttp\json_encode($this->getRequest()->user));
+
         $userObj = (object)$this->getRequest()->user;
         if (isset($this->getRequest()->user['avatar'])) {
             $user->setAvatar($this->getRequest()->user['avatar']);
@@ -49,7 +50,10 @@ class DB extends ViberBot
 
     public function Message()
     {
-        $userObj = (object)$this->getRequest()->sender;
+        Log::alert(\GuzzleHttp\json_encode($this->getRequest()->message));
+        if (isset($this->getRequest()->sender)) {
+            $userObj = (object)$this->getRequest()->sender;
+        }
 
         $data1 = [
             "user_id" => $userObj->id,
@@ -76,7 +80,14 @@ class DB extends ViberBot
             $data["sticker_id"] = $this->getRequest()->message["sticker_id"];
         }
         if (isset($this->getRequest()->message["contact"])) {
-            $data["contact"] = $this->getRequest()->message["contact"];
+            $data["contact"] = $this->getRequest()->message["contact"]['phone_number'];
+          ViberUser::updateOrCreate(
+                ["user_id" =>"$userObj->id"],
+                [
+                    "phone"=>  $data["contact"]
+                ]
+
+            );
         }
         if (isset($this->getRequest()->message["file_name"])) {
             $data["file_name"] = $this->getRequest()->message["file_name"];
@@ -95,7 +106,7 @@ class DB extends ViberBot
     public function insertData()
     {
 
-        Log::debug($this->getEvent());
+//        Log::debug($this->getEvent());
         if ($this->getEvent() == 'conversation_started') {
             $this->startedConversation();
         } elseif ($this->getEvent() == 'message') {

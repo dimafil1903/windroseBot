@@ -12,6 +12,7 @@ use App\Telegram\Helpers\FlightHelper;
 use App\Telegram\Helpers\GetApi;
 use App\Telegram\Helpers\GetMessageFromData;
 
+use App\Viber\Keyboards\ContactKeyboard;
 use App\Viber\Keyboards\FlightKeyboard;
 use App\Viber\Keyboards\FlightsKeyboard;
 use App\Viber\Keyboards\LanguageKeyboard;
@@ -44,29 +45,59 @@ class MessageCommand extends ViberBot
     {
 
 
+        /**
+         * массив с текстом и типом сообщения
+         */
         $message = $this->request->message;
+        /**
+         * обьект пользователя
+         */
         $user = new ViberUser($this->getSender()['id'], $this->getSender()['name']);
-        Log::alert(\GuzzleHttp\json_encode(file_get_contents('php://input')));
+//        Log::alert(\GuzzleHttp\json_encode(file_get_contents('php://input')));
+//dd("s");
+        /**
+         * Смотрим есть ли диалог с текущим юзером
+         */
         $this->conversation = ViberConversation::where("user_id", $user->getId())
             ->where("command", "message")
             ->where("status", "active")
             ->first();
+        /**
+         * если есть текст то мы его будем использовать
+         */
         if (isset($message["text"])) {
             $text = $message["text"];
         }
         $answer = null;
         $keyboard = null;
 
+        /**
+         * разделяем текст _ (нижней черточкой) через нее передаются параметры с событий нажатий кнопок
+         */
         $messagePiece = explode("_", $message["text"]);
+
+        /**
+         * Получаем текущий чат из базы
+         */
         $this->chat = \App\ViberUser::where("user_id", $user->getId())->first();
+        /**
+         * Нажата кнопка Языка
+         */
         if ($messagePiece[0] == "lang") {
 
             $this->chat = \App\ViberUser::find($this->chat->id);
             $this->chat->lang = $messagePiece[1];
             $this->chat->save();
-            $keyboard = new MainMenu($user->getId());
-            $keyboard = $keyboard->getKeyboard($this->chat->lang);
-            $answer = Lang::get("messages.changedLang", [], $this->chat->lang);
+            if(!$this->chat->phone){
+                $keyboard=new ContactKeyboard();
+                $keyboard=$keyboard->getKeyboard($this->chat->lang);
+                $answer = Lang::get("messages.shareContactMessage", [], $this->chat->lang);
+            }else{
+                $keyboard = new MainMenu($user->getId());
+                $keyboard = $keyboard->getKeyboard($this->chat->lang);
+                $answer = Lang::get("messages.changedLang", [], $this->chat->lang);
+            }
+
         }
 
         $main_menu_items = MenuItem::
@@ -80,6 +111,9 @@ class MessageCommand extends ViberBot
 
 
         $keyboardMessage = new KeyboardMessage();
+        /**
+         * Если нажата кнопка меню (из базы)
+         */
         if ($menu_item) {
             $this->closeConvers($user->getId());
             $subMenu = new MainMenu($user->getId());
@@ -95,16 +129,28 @@ class MessageCommand extends ViberBot
         /**
          * Language KEYBOARD
          */
-
-        if (!$this->chat->lang) {
+        if ($text == $this->getTitle('buttons.change_lang') || !$this->chat->lang) {
             $keyboard = new LanguageKeyboard();
             $keyboard = $keyboard->getKeyboard();
             $answer = "Оберіть мову/Choose language";
         }
-        if ($text == $this->getTitle('buttons.change_lang')) {
-            $keyboard = new LanguageKeyboard();
-            $keyboard = $keyboard->getKeyboard();
-            $answer = "Оберіть мову/Choose language";
+        if ($text=="getphone"){
+            $phone= $message["contact"]["phone_number"];
+            $answer = Lang::get("messages.successPhoneNumber",['phone'=>$phone],$this->chat->lang);
+           $TempUser= \App\ViberUser::find($this->chat->id);
+            $TempUser->phone=$phone;
+            $TempUser->save();
+            $keyboard = new MainMenu($user->getId());
+
+            $keyboard = $keyboard->getKeyboard($this->chat->lang);
+            $bot = new Bot($this->getRequest(), $keyboard);
+            $bot->on(new MessageEvent($this->getRequest()->timestamp, $this->getRequest()->message_token,
+                $user, $this->getRequest()->message))
+                ->replay(
+                    $answer
+                )
+                ->send();
+            $answer = Lang::get("messages.startMessage", ["name" => $this->chat->name, "nameBot" => env("VIBERBOT_NAME")], $this->chat->lang);
         }
 
         /**
@@ -121,10 +167,10 @@ class MessageCommand extends ViberBot
                 $answer = "Its main menu";
             }
             if ($text == "BackToSchedule") {
-                $answer = Lang::get('messages.returnToMainMenu',[],$this->chat->lang);
+                $answer = Lang::get('messages.returnToMainMenu', [], $this->chat->lang);
             }
             if ($text == $textExit->exit_button($item, $this->chat->lang)) {
-                $answer = Lang::get('messages.returnToMainMenu',[],$this->chat->lang);
+                $answer = Lang::get('messages.returnToMainMenu', [], $this->chat->lang);
             }
 
         }
@@ -149,7 +195,7 @@ class MessageCommand extends ViberBot
             $date = new DateTime('NOW', new DateTimeZone('Europe/Kiev'));
 
             $date = $date->format($format);
-            $answer = Lang::get('messages.FlightListsOn',['date'=>ConvertDate::ConvertToWordMonth($date,$this->chat->lang)],$this->chat->lang);
+            $answer = Lang::get('messages.FlightListsOn', ['date' => ConvertDate::ConvertToWordMonth($date, $this->chat->lang)], $this->chat->lang);
 
 
 //            dd($date);
@@ -158,7 +204,7 @@ class MessageCommand extends ViberBot
             $date = new DateTime('tomorrow', new DateTimeZone('Europe/Kiev'));
 
             $date = $date->format($format);
-            $answer = Lang::get('messages.FlightListsOn',['date'=>ConvertDate::ConvertToWordMonth($date,$this->chat->lang)],$this->chat->lang);
+            $answer = Lang::get('messages.FlightListsOn', ['date' => ConvertDate::ConvertToWordMonth($date, $this->chat->lang)], $this->chat->lang);
 
 
         } elseif ($text == $this->getTitle('buttons.yesterday')) {
@@ -167,9 +213,11 @@ class MessageCommand extends ViberBot
             $date = new DateTime('yesterday', new DateTimeZone('Europe/Kiev'));
 
             $date = $date->format($format);
-            $answer = Lang::get('messages.FlightListsOn',['date'=>ConvertDate::ConvertToWordMonth($date,$this->chat->lang)],$this->chat->lang);
+            $answer = Lang::get('messages.FlightListsOn', ['date' => ConvertDate::ConvertToWordMonth($date, $this->chat->lang)], $this->chat->lang);
 
-
+            /**
+             * Нажата кнопка ваша дата
+             */
         } elseif ($text == $this->getTitle('buttons.your_date')) {
             $this->closeConvers($user->getId());
             $subMenu = new MainMenu($user->getId());
@@ -178,6 +226,9 @@ class MessageCommand extends ViberBot
             $answer = Lang::get("messages.inputYourDate", [], $this->chat->lang) . "\n" .
                 Lang::get("messages.example", ["date" => $twoDay->format("d.m")], $this->chat->lang);
 
+            /**
+             * Проверка на текущий диалог С ботом (При выборе своей даты)
+             */
             if (!$this->conversation) {
                 $conversation = ViberConversation::updateOrCreate(
                     ['user_id' => $user->getId(),
@@ -194,10 +245,14 @@ class MessageCommand extends ViberBot
             $keyboard = $subMenu->getSubMenu($menu_item->id, $this->chat->lang, "regular");
 
             $keyboard = $keyboardMessage->setKeyboard($keyboard);
+
+            /**
+             * при  нажатии пагинации или возвращении к списку  рейсов на конкретный день
+             */
         } elseif ($messagePiece[0] == "page" || $messagePiece[0] == "backToFlightList") {
             $this->closeConvers($user->getId());
             $date = $messagePiece[1];
-            Log::warning($date);
+//            Log::warning($date);
             if (isset($messagePiece[2])) {
                 $page = $messagePiece[2];
             }
@@ -205,8 +260,8 @@ class MessageCommand extends ViberBot
 
             if ($messagePiece[0] == "page") {
 
-                $answer = Lang::get('messages.FlightListsOn',['date'=>ConvertDate::ConvertToWordMonth($date,$this->chat->lang)],$this->chat->lang).
-                   "\n". Lang::get('messages.page',['page'=>$page],$this->chat->lang) ;
+                $answer = Lang::get('messages.FlightListsOn', ['date' => ConvertDate::ConvertToWordMonth($date, $this->chat->lang)], $this->chat->lang) .
+                    "\n" . Lang::get('messages.page', ['page' => $page], $this->chat->lang);
 
                 if ($page < 1) {
                     $answer = Lang::get("messages.YouAlreadyAtStart", [], $this->chat->lang);
@@ -262,7 +317,7 @@ class MessageCommand extends ViberBot
                     $date = $dt->format("Y-m-d");
                     $this->conversation->notes = \GuzzleHttp\json_encode($notes);
                     $this->conversation->save();
-                    $answer = Lang::get('messages.FlightListsOn',['date'=>ConvertDate::ConvertToWordMonth($date,$this->chat->lang)],$this->chat->lang);
+                    $answer = Lang::get('messages.FlightListsOn', ['date' => ConvertDate::ConvertToWordMonth($date, $this->chat->lang)], $this->chat->lang);
                     $yourDate = true;
                 } else {
                     if ($messagePiece[0] == "page" || $messagePiece[0] == "BackToSchedule" || $messagePiece[0] == "flight" || $messagePiece == "backToFlightList") {
@@ -285,12 +340,19 @@ class MessageCommand extends ViberBot
 
         }
 
+        /**
+         * Нажата кнока возвращения к списку рейсов на конкретный день
+         */
         if ($messagePiece[0] == "backToFlightList") {
             $date = $messagePiece[1];
             $page = $messagePiece[2];
             $fieldStatus = $messagePiece[3];
-            $answer = Lang::get('messages.returnToList',[],$this->chat->lang);
+            $answer = Lang::get('messages.returnToList', [], $this->chat->lang);
         }
+
+        /**
+         * если с какой-то кнопкой передается параметр даты то попадаем сюда
+         */
         if ($date) {
             $getApi = new GetApi();
             $api = $getApi->getFlightsByDate($date);
@@ -317,7 +379,7 @@ class MessageCommand extends ViberBot
                 }
 
 
-            }else{
+            } else {
                 $answer = Lang::get("messages.NoFlightsOnThisDate", [], $this->chat->lang);
                 $keyboard = new Keyboard([(new Button('reply', "BackToSchedule", "<font color='#FFFFFF'>" . Lang::get('messages.cancel', [], $this->chat->lang) . "</font>"))->setBgColor("#8176d6")]);
                 $keyboard = $keyboardMessage->setKeyboard($keyboard);
@@ -343,20 +405,13 @@ class MessageCommand extends ViberBot
 //            dd($fligtsData);
             if (isset($fligtsData->code)) {
                 if ($fligtsData->code == 404) {
-
-
                     $answer = Lang::get("messages.NoFlightsOnThisDate", [], $this->chat->lang);
-
-
                 }
                 if ($fligtsData->code == 500) {
                     $answer = Lang::get("messages.serverError", [], $this->chat->lang);
 //
-
                 }
-
             }
-
 //            dd($date,$callback_data);
 
 
@@ -365,22 +420,20 @@ class MessageCommand extends ViberBot
                 $flight = $flights->where("flight_number", $number)->first();
 //                dd($flight);
                 $keyboard = (new FlightKeyboard())->createCardButtons($flight, $page, $date, $user->getId(), $this->chat->lang);
-                Log::error(\GuzzleHttp\json_encode($messagePiece));
+//                Log::error(\GuzzleHttp\json_encode($messagePiece));
                 if (isset($messagePiece[6])) {
-
                     if ($messagePiece[6] == "myList") {
                         $keyboard = (new FlightKeyboard())->createCardButtons($flight, $page, $date, $user->getId(), $this->chat->lang, "myList");
-
-
                     }
                 }
                 $keyboard = $keyboardMessage->setKeyboard($keyboard);
-
-
                 $answer = GetMessageFromData::generateCard($flight, $this->chat->lang);
             }
         }
 
+        /**
+         * Нажимаем кнопку отслеживать
+         */
         if ($messagePiece[0] == 'track') {
             $date = $messagePiece[1];
             $page = $messagePiece[2];
@@ -458,6 +511,9 @@ class MessageCommand extends ViberBot
 //            dd($creteFlightTracking->wasRecentlyCreated);
 //            dd($createFlightTracking);
         }
+        /**
+         * Если нажата Мои рейсы или назад к моим рейсам или пагинация по моим рейсам
+         */
         if ($messagePiece[0] == $this->getTitle('buttons.myFlightList') || $messagePiece[0] == "mylist" || $messagePiece[0] == "BackToMyList") {
 
 
@@ -468,7 +524,7 @@ class MessageCommand extends ViberBot
             if (isset($messagePiece[2])) {
                 $page = $messagePiece[2];
             }
-            $answer = Lang::get('messages.FlightsListText',[],$this->chat->lang);
+            $answer = Lang::get('messages.FlightsListText', [], $this->chat->lang);
             if ($messagePiece[0] == "mylist") {
                 $answer = "$date \n page #$page ";
                 if ($page < 1) {
@@ -484,9 +540,9 @@ class MessageCommand extends ViberBot
             $keyboard = new MyListKeyboard($user->getId());
 
             $keyboard = $keyboard->flights($usersTracksFlights, $user->getId(), $page);
-            $checkKeyboard=$keyboard->getKeyboard();
-            if ( count($checkKeyboard->Buttons)<=1){
-             $answer=Lang::get('messages.emptyFlightsList',[],$this->chat->lang);
+            $checkKeyboard = $keyboard->getKeyboard();
+            if (count($checkKeyboard->Buttons) <= 1) {
+                $answer = Lang::get('messages.emptyFlightsList', [], $this->chat->lang);
             }
         }
 
@@ -528,6 +584,10 @@ class MessageCommand extends ViberBot
 
     }
 
+    /**
+     * @param $user_id
+     * Удаляем с базы диалог конкретного юзера (обычно по нажатию на кнопку)
+     */
     public function closeConvers($user_id)
     {
         ViberConversation::where('user_id', $user_id)
@@ -536,6 +596,11 @@ class MessageCommand extends ViberBot
 
     }
 
+    /**
+     * @param $button
+     * @return mixed
+     * ПОлучаем Тайтл кнопки на нужном языке
+     */
     public function getTitle($button)
     {
         $item = MenuItem::where('id', telegram_config_no_translate($button))->

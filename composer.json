@@ -18,6 +18,7 @@
         "maatwebsite/excel": "^3.1",
         "paragraf-lex/viber-bot": "^0.0.7",
         "php-telegram-bot/laravel": "^0.0.1",
+        "pimax/fb-messenger-php": "dev-master",
         "symfony/psr-http-message-bridge": "^1.1",
         "tcg/voyager": "^1.3"
     },

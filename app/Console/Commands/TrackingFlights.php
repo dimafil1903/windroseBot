@@ -72,7 +72,7 @@ class TrackingFlights extends Command
                         $chat = ViberUser::where('user_id',$item->chat_id)->first();
                     }
                     $this->info("$item->date");
-                    $text=Lang::get("messages.messageAboutDelay", ["number" => $item->carrier . "-" . $item->flight_number, "delay" => gmdate("H:i", (int)$flight["delay"])], "$chat->lang");
+                    $text=Lang::get("messages.messageAboutDelay", ["flight" => $item->carrier . "-" . $item->flight_number, "delay" => gmdate("H:i", (int)$flight["delay"])], "$chat->lang");
 
                     if ($item->type=="telegram") {
                         $data = [

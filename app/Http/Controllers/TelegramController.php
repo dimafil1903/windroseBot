@@ -21,18 +21,20 @@ class TelegramController extends Controller {
      * Get commands list
      *
      * @param PhpTelegramBotContract $telegram_bot
+     * @param \Illuminate\Http\Request $request
      * @return void $commands
      * @throws TelegramException
      */
     public function hook(PhpTelegramBotContract $telegram_bot,\Illuminate\Http\Request $request) {
-//        Log::info( Request::getInput());
-//        Log::debug(\GuzzleHttp\json_encode($request->json()));
+        Log::info(\GuzzleHttp\json_encode( Request::getInput()));
+//       Log::debug(\GuzzleHttp\json_encode($request->json()));
         $telegram_bot->handle();
 
     }
-    public function info(PhpTelegramBotContract $telegram_bot) {
+    public function info(PhpTelegramBotContract $telegram_bot,\Illuminate\Http\Request $request) {
 
             $telegram_bot->handleGetUpdates();
+
 
 
 

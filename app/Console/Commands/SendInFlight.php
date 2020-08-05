@@ -93,6 +93,8 @@ class SendInFlight extends Command
                 $chat = Chat::find($item->chat_id);
                 if ($item->type=="viber"){
                     $chat=ViberUser::where('user_id',"$item->chat_id")->first();
+                }else{
+                    $chat=Chat::find($item->chat_id);
                 }
                 $lang = $chat->lang;
                 $langApi = $lang;

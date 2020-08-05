@@ -8,7 +8,7 @@ use App\FlightTracking;
 use App\ViberUser;
 use DateTime;
 use Illuminate\Support\Facades\Lang;
-use Illuminate\Support\Facades\Log;
+
 use Paragraf\ViberBot\Messages\KeyboardMessage;
 use Paragraf\ViberBot\Model\Button;
 use Paragraf\ViberBot\Model\Keyboard;
@@ -81,7 +81,7 @@ class MyListKeyboard
             $from = \GuzzleHttp\json_decode($datum->fromJSON);
             $to = \GuzzleHttp\json_decode($datum->toJSON);
             $date = $datum->date;
-            Log::emergency(\GuzzleHttp\json_encode($data));
+//            Log::emergency(\GuzzleHttp\json_encode($data));
             $time = new DateTime($datum["departure_date"]);
             $time = $time->format("H:i");
             $time2 = new DateTime($datum["arrival_date"]);

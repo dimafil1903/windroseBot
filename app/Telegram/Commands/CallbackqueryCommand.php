@@ -16,8 +16,10 @@ use App\Telegram\Helpers\ConvertDate;
 use App\Telegram\Helpers\FlightHelper;
 use App\Telegram\Helpers\GetApi;
 use App\Telegram\Helpers\GetMessageFromData;
+use App\Telegram\keyboards\ContactsKeyboard;
 use App\Telegram\keyboards\CreateInlineKeyboard;
 use App\Telegram\keyboards\LangInlineKeyboard;
+use App\TelegramUser;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Lang;
 use Longman\TelegramBot\Commands\SystemCommand;
@@ -326,15 +328,30 @@ class CallbackqueryCommand extends SystemCommand
             if (isset($lang)) {
                 $lang_menu->set($lang, $callback_message_id);
             }
+            $chat = Chat::find($chat_id);
+            $userTg=TelegramUser::find($chat_id);
+            if (!$userTg->phone) {
+//                    $keyboard = $keyboard->getMainKeyboard($chat_id);
+                $keyboard = (new ContactsKeyboard())->getKeyboard($chat->lang);
+                $data = [
+                    'chat_id' => $chat_id,
+                    'text' => Lang::get('messages.shareContactMessage', [], $chat->lang),
+                    'reply_markup' => $keyboard,
+                ];
+
+
+              return  Request::sendMessage($data);
+            }
             if ($onStart == "1") {
-                $chat = Chat::find($chat_id);
+
                 $data = [
                     'chat_id' => $chat_id,
                     'text' => Lang::get("messages.startMessage", ["name" => $callback_query->getFrom()->getFirstName(), "nameBot" => $callback_query->getBotUsername()], "$chat->lang"),
 
                 ];
-                return Request::sendMessage($data);
+              return  Request::sendMessage($data);
             }
+
         }
 
 

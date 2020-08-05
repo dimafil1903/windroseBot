@@ -72,9 +72,11 @@ class SendAndDeleteArrived extends Command
                 $from=(array) json_decode($item->fromJSON);
 //                var_dump($from);
                 $to=(array) json_decode($item->toJSON);
-                $chat=Chat::find($item->chat_id);
+
                 if ($item->type=="viber"){
                     $chat=ViberUser::where('user_id',"$item->chat_id")->first();
+                }else{
+                    $chat=Chat::find($item->chat_id);
                 }
                 $lang=$chat->lang;
                 $langApi=$lang;

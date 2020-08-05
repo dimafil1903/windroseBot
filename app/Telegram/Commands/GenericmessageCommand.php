@@ -13,8 +13,10 @@ namespace Longman\TelegramBot\Commands\SystemCommands;
 use App\Chat;
 
 use App\FlightTracking;
-use App\Http\Controllers\SendMessage;
+
 use App\MenuItem;
+use App\Telegram\keyboards\MainKeyboard;
+use App\TelegramUser;
 use DateInterval;
 
 use App\Telegram\Helpers\ConvertDate;
@@ -92,12 +94,29 @@ class GenericmessageCommand extends SystemCommand
         $message = $this->getMessage();
         $chat_id = $message->getChat()->id;
         $text = $message->getText();
+        $from=$message->getFrom();
 
+      $contact=  $message->getContact();
+        $chat = Chat::where('id', $chat_id)->first();
+      if ($contact){
+          if ($contact->getUserId()==$from->getId()) {
+            $tgUser  =TelegramUser::find($contact->getUserId());
+            $tgUser->phone=$contact->getPhoneNumber();
+            $tgUser->save();
+              $keyboard=( new MainKeyboard())->getMainKeyboard($chat_id);
+              $this->replyToUser(Lang::get('messages.successPhoneNumber',['phone'=>$contact->getPhoneNumber()],$chat->lang));
+
+              $this->replyToUser(Lang::get("messages.startMessage", ["name" => $message->getFrom()->getFirstName(), "nameBot" => $message->getBotUsername()], "$chat->lang"),["reply_markup"=>$keyboard]);
+              }else{
+              $this->replyToUser("Sorry BUT This is not your contact");
+          }
+//          dd($contact->getPhoneNumber());
+      }
         $this->chat_id = $chat_id;
         $this->text = $text;
 
 
-        $chat = Chat::where('id', $chat_id)->first();
+
 
         /**
          * Начало работы с Меню
@@ -180,8 +199,6 @@ class GenericmessageCommand extends SystemCommand
 
         /**
          * КНОПКА СМЕНЫ языка
-         *
-         *
          */
         $t = $this->getTitle('buttons.change_lang');
         if ($text == $t) {
@@ -189,11 +206,6 @@ class GenericmessageCommand extends SystemCommand
             $lang_menu = new LangInlineKeyboard($chat_id);
             $lang_menu->create_inline_menu();
         }
-//        $t=$this->getTitle('buttons.settings');
-//        if($text==$t){
-//            $lang_menu= new LangInlineKeyboard($chat_id);
-//            $lang_menu->create_inline_menu();
-//        }
         /**
          * НАЖАТА КНОПКА ВАША ДАТА||СЕГОДНЯ||ЗАВТРА||ВЧЕРА
          *
@@ -209,14 +221,16 @@ class GenericmessageCommand extends SystemCommand
 
             $date = $date->format($format);
 //            dd($date);
-        } elseif ($text == $this->getTitle('buttons.tomorrow')) {
+        }
+        elseif ($text == $this->getTitle('buttons.tomorrow')) {
             $this->closeConvers($message, $chat_id);
             $date = new DateTime('tomorrow', new DateTimeZone('Europe/Kiev'));
 
             $date = $date->format($format);
 
 //            dd($date);
-        } elseif ($text == $this->getTitle('buttons.yesterday')) {
+        }
+        elseif ($text == $this->getTitle('buttons.yesterday')) {
             $this->closeConvers($message, $chat_id);
 //            $d = strtotime("yesterday");
             $date = new DateTime('yesterday', new DateTimeZone('Europe/Kiev'));
@@ -224,7 +238,8 @@ class GenericmessageCommand extends SystemCommand
             $date = $date->format($format);
 //            $date = date($format, $d);
 //            dd($date);
-        } elseif ($text == $this->getTitle('buttons.your_date')) {
+        }
+        elseif ($text == $this->getTitle('buttons.your_date')) {
             $this->closeConvers($message, $chat_id);
             $convers = new Conversation($message->getFrom()->getId(), $chat_id, "your_date");
 
@@ -252,6 +267,9 @@ class GenericmessageCommand extends SystemCommand
 
             $convers->update();
         } else {
+            /**
+             * Если нажата кнопка меню
+             */
             foreach ($main_menu_items as $menu_item) {
                 if ($text == $menu_item->title) {
                     $this->closeConvers($message, $chat_id);
@@ -269,6 +287,9 @@ class GenericmessageCommand extends SystemCommand
                 ->where('chat_id', $chat_id)
                 ->where('command', "your_date")
                 ->where('status', 'active')->first();
+            /**
+             * Если есть диалог с юзером (Он вводит свою дату)
+             */
             if ($conversModel) {
 
 
@@ -294,7 +315,9 @@ class GenericmessageCommand extends SystemCommand
                             $errorMessage = Lang::get("messages.wrongDateInput", [], "$chat->lang");
                         }
                     }
-
+                    /**
+                     * Если есть
+                     */
                     if (!$errorMessage) {
                         if ($date_array[1] < date("m")) {
 //                     $errorMessage="TRANSLATE OUTDATED";
@@ -318,6 +341,9 @@ class GenericmessageCommand extends SystemCommand
                 }
             }
         }
+        /**
+         * Если по нажатию на колбек кнопку передается дата то идем сюда
+         */
         if ($date) {
             $getApi=new GetApi();
             $api = $getApi->getFlightsByDate($date);
@@ -348,70 +374,6 @@ class GenericmessageCommand extends SystemCommand
                 return Request::sendMessage($data);
             }
         }
-        /**
-         *
-         *
-         * кнопка рассылки
-         */
-
-
-
-
-        /**
-         * Конец Работы с главными кнопками
-         *
-         *
-         */
-
-
-        /**
-         *
-         *
-         *
-         * MAIN MENU GENERATION
-         */
-
-
-
-        /**
-         *
-         * Работа с геолокацией
-         */
-
-//        $test=$message->getLocation()->toJson();
-//        $test=json_decode($test);
-//        $lat= $test->latitude;
-//        $long=$test->longitude;
-//        $key=env('GOOGLE_MAPS_API_KEY');
-//        $lang=$chat->lang;
-//        $curl = curl_init();
-//
-//        curl_setopt_array($curl, array(
-//            CURLOPT_URL => "https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$long&key=$key&language=$lang",
-//            CURLOPT_RETURNTRANSFER => true,
-//            CURLOPT_ENCODING => "",
-//            CURLOPT_MAXREDIRS => 10,
-//            CURLOPT_TIMEOUT => 0,
-//            CURLOPT_FOLLOWLOCATION => true,
-//            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//            CURLOPT_CUSTOMREQUEST => "GET",
-//        ));
-//
-//        $response = curl_exec($curl);
-//
-//        curl_close($curl);
-//
-//        $someObject = json_decode($response);
-//        var_dump($someObject);      // Dump all data of the Object
-//
-//        $answer=$someObject->results[0]->formatted_address;
-//        $data = [
-//            'chat_id' => $chat_id,
-//            'text'    => $answer,
-//
-//        ];
-//        Request::sendMessage($data);
-
 
     }
 
@@ -423,6 +385,11 @@ class GenericmessageCommand extends SystemCommand
 
     }
 
+    /**
+     * @param $button
+     * @return mixed
+     * Получаем тайтл кнопки менб из базы
+     */
     public function getTitle($button)
     {
         $item = MenuItem::where('id', telegram_config_no_translate($button))->

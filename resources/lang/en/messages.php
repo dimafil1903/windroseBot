@@ -65,7 +65,11 @@ Select menu item 👇
     "NoFlightsOnThisDate"=>"There are no flights on this date",
     "serverError"=>"OOOOOPS, we have some server issues",
     "thisFlightAlreadyArrived"=>"Sorry, but this flight has already arrived",
+    "messageAboutThirtyMinutes"=>"Flight :flight will arrive in 30 minutes",
+    "messageAboutDelay" => "Flight :flight is delayed for :delay minutes",
     "messageAboutTwelve"=>"Flight :flight leaves in 12 hours ",
     "messageAboutOneDay"=>"Flight :flight departs tomorrow at this time ",
-
+    "shareContactMessage"=>"Okay, share your phone number with us",
+    "shareContact"=>"Share contact",
+    "successPhoneNumber"=>"Phone number (:phone) is set",
 ];

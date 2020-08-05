@@ -5,24 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Viber\ViberBot;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Input;
-use Paragraf\ViberBot\Bot;
-use Paragraf\ViberBot\Client;
-use Paragraf\ViberBot\Event\Event;
-use Paragraf\ViberBot\Event\MessageEvent;
-use Paragraf\ViberBot\Http\Http;
-use Paragraf\ViberBot\Messages\KeyboardMessage;
-use Paragraf\ViberBot\Messages\Message;
-use Paragraf\ViberBot\Model\Button;
-use Paragraf\ViberBot\Model\Keyboard;
-use Paragraf\ViberBot\Model\ViberUser;
-use Paragraf\ViberBot\TextMessage;
-use Illuminate\Support\Facades\Log;
-use Paragraf\ViberBot\ViberBotServiceProvider;
-use PhpTelegramBot\Laravel\PhpTelegramBotContract;
 
-//use Viber\Client;
-//require_once("./vendor/autoload.php");
 
 class ViberBotController extends Controller
 {
