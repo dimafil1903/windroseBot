@@ -20,7 +20,8 @@ Route::get('unset', 'TelegramController@unset');
 Route::get('set', 'TelegramController@set');
 Route::post('hooktg', 'TelegramController@hook');
 Route::get('info', 'TelegramController@info');
-Route::any('hookfb', 'FbMessangerController@hook');
+Route::any('hook/fb', 'FbMessengerController@hook');
+
 
 Route::get('check', 'SendMessage@check');
 Route::post("hook", "ViberBotController@hook");

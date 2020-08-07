@@ -118,7 +118,6 @@
       <path value="$PROJECT_DIR$/vendor/paragraf-lex/viber-bot" />
       <path value="$PROJECT_DIR$/vendor/bogdaan/viber-bot-php" />
       <path value="$PROJECT_DIR$/vendor/pimax/fb-messenger-php" />
-      <path value="$PROJECT_DIR$/vendor/botman/botman" />
       <path value="$PROJECT_DIR$/vendor/tightenco/collect" />
       <path value="$PROJECT_DIR$/vendor/mpociot/pipeline" />
       <path value="$PROJECT_DIR$/vendor/evenement/evenement" />
@@ -130,6 +129,8 @@
       <path value="$PROJECT_DIR$/vendor/react/promise" />
       <path value="$PROJECT_DIR$/vendor/react/event-loop" />
       <path value="$PROJECT_DIR$/vendor/spatie/macroable" />
+      <path value="$PROJECT_DIR$/vendor/botman/botman" />
+      <path value="$PROJECT_DIR$/vendor/botman/driver-telegram" />
       <path value="$PROJECT_DIR$/vendor/botman/driver-facebook" />
     </include_path>
   </component>

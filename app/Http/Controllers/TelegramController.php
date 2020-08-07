@@ -7,6 +7,9 @@ use Longman\TelegramBot\Entities\Payments\PreCheckoutQuery;
 use Longman\TelegramBot\Exception\TelegramException;
 use Longman\TelegramBot\Request;
 use PhpTelegramBot\Laravel\PhpTelegramBotContract;
+use BotMan\BotMan\BotMan;
+use BotMan\BotMan\BotManFactory;
+use BotMan\BotMan\Drivers\DriverManager;
 
 
 class TelegramController extends Controller {
@@ -26,9 +29,10 @@ class TelegramController extends Controller {
      * @throws TelegramException
      */
     public function hook(PhpTelegramBotContract $telegram_bot,\Illuminate\Http\Request $request) {
-        Log::info(\GuzzleHttp\json_encode( Request::getInput()));
+//        Log::info(\GuzzleHttp\json_encode( Request::getInput()));
 //       Log::debug(\GuzzleHttp\json_encode($request->json()));
         $telegram_bot->handle();
+// Load the driver(s) you want to use
 
     }
     public function info(PhpTelegramBotContract $telegram_bot,\Illuminate\Http\Request $request) {
