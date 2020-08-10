@@ -54,7 +54,7 @@ class StartCommand extends UserCommand
             $date = $paramPieces[1];
             $lang = $paramPieces[2];
             $firstTime = false;
-            if (!$chat->lang ) {
+            if (!$chat->lang) {
                 $firstTime = true;
                 $chat->lang = $lang;
                 $chat->save();
@@ -159,8 +159,6 @@ class StartCommand extends UserCommand
             } else {
 
 
-
-
                 if (!$userTg->phone) {
 //                    $keyboard = $keyboard->getMainKeyboard($chat_id);
                     $keyboard = (new ContactsKeyboard())->getKeyboard($chat->lang);
@@ -172,7 +170,7 @@ class StartCommand extends UserCommand
 
                     Request::sendMessage($data);
 
-                }else{
+                } else {
                     $keyboard = $keyboard->getMainKeyboard($chat_id);
 
                     $data = [

@@ -43,12 +43,16 @@ class MainKeyboard
             ->where('parent_id', $id)
             ->orderBy('order', 'ASC')
             ->get();
-        $main_menu = $main_menu->translate($lang);
         $buttons = [];
-        foreach ($main_menu as $menu) {
-            $key=  TelegramConfig::where('value',$menu->id)->first();
-            $buttons[] = Button::create($menu->title)->value($key->key);
+        if ($main_menu->isNotEmpty()) {
+            $main_menu = $main_menu->translate($lang);
+
+            foreach ($main_menu as $menu) {
+                $key = TelegramConfig::where('value', $menu->id)->first();
+                $buttons[] = Button::create($menu->title)->value($key->key);
+            }
         }
+        $buttons[] = Button::create("Back")->value('main_menu');
         return $buttons;
     }
 }

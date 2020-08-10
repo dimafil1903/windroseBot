@@ -6,7 +6,10 @@ namespace App\Messenger;
 
 use App\Messenger\Conversations\FlightsConversation;
 use App\Messenger\Conversations\LangConversation;
+use App\Messenger\Conversations\MainMenuConversation;
+use App\Messenger\Conversations\MyFlightList;
 use App\Messenger\Conversations\StartConversation;
+use App\Messenger\Conversations\YourDateConversation;
 use App\Messenger\keyboard\MainKeyboard;
 use App\MessengerUser;
 use App\Telegram\Helpers\ConvertDate;
@@ -37,33 +40,34 @@ class Messenger
 
 //        $user = $botman->getMessage()->getSender();
 
-        $botman->hears('hi', function (BotMan $bot) {
+//        $botman->hears('hi', function (BotMan $bot) {
+//
+//            $elements = [];
+//            for ($i = 0; $i < 10; $i++) {
+//                $elements[] = Element::create('КИЕВ(БОРИСПОЛЬ) 08:00-ШАРМ-ЭЛЬ-ШЕЙХ 21:00 ')
+//                    ->subtitle('This is the best way to start with Laravel and BotMan')
+//                    ->addButton(ElementButton::create('Отслеживать')
+//                        ->url('https://github.com/mpociot/botman-laravel-starter')
+//                    );
+//            }
+//            $bot->reply(GenericTemplate::create()
+//                ->addImageAspectRatio(GenericTemplate::RATIO_SQUARE)
+//                ->addElements($elements)
+//            );
+//
+//            $bot->reply(Question::create('Pick another page')->addButtons(
+//                [
+//                    Button::create('1')->value('1'),
+//                    Button::create('2')->value('2'),
+//                    Button::create('3')->value('3'),
+//                    Button::create('4')->value('4'),
+//                    Button::create('5')->value('5'),
+//                    Button::create('6')->value('6'),
+//                    Button::create('7')->value('7'),
+//                ]
+//            ));
+//        });
 
-            $elements = [];
-            for ($i = 0; $i < 10; $i++) {
-                $elements[] = Element::create('КИЕВ(БОРИСПОЛЬ) 08:00-ШАРМ-ЭЛЬ-ШЕЙХ 21:00 ')
-                    ->subtitle('This is the best way to start with Laravel and BotMan')
-                    ->addButton(ElementButton::create('Отслеживать')
-                        ->url('https://github.com/mpociot/botman-laravel-starter')
-                    );
-            }
-            $bot->reply(GenericTemplate::create()
-                ->addImageAspectRatio(GenericTemplate::RATIO_SQUARE)
-                ->addElements($elements)
-            );
-
-            $bot->reply(Question::create('Pick another page')->addButtons(
-                [
-                    Button::create('1')->value('1'),
-                    Button::create('2')->value('2'),
-                    Button::create('3')->value('3'),
-                    Button::create('4')->value('4'),
-                    Button::create('5')->value('5'),
-                    Button::create('6')->value('6'),
-                    Button::create('7')->value('7'),
-                ]
-            ));
-        });
         $botman->hears('start', function ($bot) {
 
             $bot->startConversation(new StartConversation());
@@ -82,8 +86,6 @@ class Messenger
         $botman->hears($mainMenuArray, function (BotMan $bot) use ($main_menu_collection) {
             if (!$bot->getMessage()->isFromBot()) {
 //                $payload = $bot->getMessage()->getPayload();
-
-
                 $user = MessengerUser::where('user_id', "" . $bot->getUser()->getId())->first();
 
 
@@ -100,7 +102,7 @@ class Messenger
                     if ($button) {
                         $hasChildrens = MenuItem::where('menu_id', 2)->where('parent_id', $button->value)->first();
 
-//                        Log::alert("BUTTON".$button->id, (array)$button);
+//            Ω
                         if ($hasChildrens) {
                             $bot->reply(Question::create($button->key)->addButtons(
                                 (new MainKeyboard())->getSub($button->value, $user->lang)
@@ -147,8 +149,8 @@ class Messenger
 
                 $bot->userStorage()->save([
                     'date' => $date,
-                    'format'=>$format,
-                    'answer'=>$answer
+                    'format' => $format,
+                    'answer' => $answer
                 ]);
 
                 $bot->startConversation(new FlightsConversation());
@@ -168,8 +170,8 @@ class Messenger
 
                 $bot->userStorage()->save([
                     'date' => $date,
-                    'format'=>$format,
-                    'answer'=>$answer
+                    'format' => $format,
+                    'answer' => $answer
                 ]);
 
                 $bot->startConversation(new FlightsConversation());
@@ -187,18 +189,24 @@ class Messenger
 
                 $bot->userStorage()->save([
                     'date' => $date,
-                    'format'=>$format,
-                    'answer'=>$answer
+                    'format' => $format,
+                    'answer' => $answer
                 ]);
 
                 $bot->startConversation(new FlightsConversation());
             }
         });
+//        "track_" . $date . '_' . $current_page . "_" . $datum["flight_number"] . "_" . $status
 
-
-
-
-
+        $botman->hears('buttons.myFlightList', function (BotMan $bot) {
+            $bot->startConversation(new MyFlightList());
+        });
+        $botman->hears('buttons.your_date', function ($bot) {
+            $bot->startConversation(new YourDateConversation());
+        });
+        $botman->hears('main_menu', function ($bot) {
+            $bot->startConversation(new MainMenuConversation());
+        });
 
         $botman->fallback(function (BotMan $bot) {
             $userM = MessengerUser::where('user_id', "" . $bot->getUser()->getId())->first();
