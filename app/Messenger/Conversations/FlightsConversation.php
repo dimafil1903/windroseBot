@@ -99,7 +99,7 @@ class FlightsConversation extends Conversation
     public function stopsConversation(IncomingMessage $message)
     {
         if ($message->getText() == 'stop') {
-            $this->getBot()->userStorage()->delete();
+//            $this->getBot()->userStorage()->delete();
             return true;
         }
 

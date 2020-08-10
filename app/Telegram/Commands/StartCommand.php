@@ -54,7 +54,7 @@ class StartCommand extends UserCommand
             $date = $paramPieces[1];
             $lang = $paramPieces[2];
             $firstTime = false;
-            if (!$chat->lang && false) {
+            if (!$chat->lang ) {
                 $firstTime = true;
                 $chat->lang = $lang;
                 $chat->save();
@@ -102,7 +102,7 @@ class StartCommand extends UserCommand
 //            }
                 $createFlightTracking = FlightTracking::updateOrCreate([
                     "date" => $date,
-
+                    "type" => "telegram",
                     "chat_id" => $chat_id,
                     "person_id" => $message->getFrom()->getId(),
                     "flight_number" => $flight_number,
@@ -125,9 +125,10 @@ class StartCommand extends UserCommand
                 if ($status == 1 || $status == 5 || $status == 4) {
                     $from = (array)$flight["from"];
                     $to = (array)$flight["to"];
-                    $lang = $chat->lang;
+
                     if ($lang == "uk")
                         $lang = 'ua';
+
                     $dataToSendMessage = [
                         "chat_id" => $chat_id,
                         "text" => Lang::get("messages.answerForTrack", [], "$chat->lang") .
