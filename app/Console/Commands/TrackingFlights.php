@@ -4,10 +4,19 @@ namespace App\Console\Commands;
 
 use App\Chat;
 use App\FlightTracking;
+use App\Messenger\keyboard\MainKeyboard;
+use App\Messenger\Messenger;
+use App\MessengerUser;
 use App\Telegram\Helpers\GetApi;
 use App\User;
 use App\Viber\Keyboards\MainMenu;
 use App\ViberUser;
+use BotMan\BotMan\BotManFactory;
+use BotMan\BotMan\Cache\LaravelCache;
+use BotMan\BotMan\Drivers\DriverManager;
+use BotMan\BotMan\Exceptions\Base\BotManException;
+use BotMan\BotMan\Messages\Outgoing\Question;
+use BotMan\Drivers\Facebook\FacebookDriver;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -51,6 +60,7 @@ class TrackingFlights extends Command
      * @param PhpTelegramBotContract $telegram_bot
      * @return void
      * @throws TelegramException
+     * @throws BotManException
      */
     public function handle(PhpTelegramBotContract $telegram_bot)
     {
@@ -70,6 +80,8 @@ class TrackingFlights extends Command
                         $chat = Chat::find($item->chat_id);
                     }elseif ($item->type=="viber"){
                         $chat = ViberUser::where('user_id',$item->chat_id)->first();
+                    }elseif ($item->type=='messenger'){
+                        $chat=MessengerUser::where('user_id',$item->chat_id)->first();
                     }
                     $this->info("$item->date");
                     $text=Lang::get("messages.messageAboutDelay", ["flight" => $item->carrier . "-" . $item->flight_number, "delay" => gmdate("H:i", (int)$flight["delay"])], "$chat->lang");
@@ -87,6 +99,21 @@ class TrackingFlights extends Command
                         $keyboard= $keyboard->getKeyboard("$chat->lang");
                         $keyboard= $keyboard->getKeyboard();
                         (new Client())->broadcast($text, ViberUser::where('user_id',"$item->chat_id")->get(),$keyboard);
+                    }elseif($item->type=="messenger"){
+                        $config = ['facebook' => [
+                            'token' => env("FACEBOOK_TOKEN"),
+                            'app_secret' => env("FACEBOOK_APP_SECRET"),
+                            'verification' => env("FACEBOOK_VERIFICATION"),
+                        ]
+                        ];
+
+
+                        $botman = BotManFactory::create($config, new LaravelCache());
+                        $botman->say(Question::create($text)->addButtons(
+
+                            (new MainKeyboard())->getKeyboard($chat->lang)
+
+                        ),$item->chat_id,FacebookDriver::class);
                     }
                     $flightUpdate = FlightTracking::find($item->id);
                     $flightUpdate->delay = $flight["delay"];

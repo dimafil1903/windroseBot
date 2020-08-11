@@ -87,7 +87,7 @@ class FlightsConversation extends Conversation
                     }
                 }
                 $buttons[] = Button::create(Lang::get('messages.back',[],$user->lang))->value('buttons.schedule');
-                $this->ask(Question::create('Pick another page')->addButtons(
+                $this->ask(Question::create(Lang::get('messages.page',['page'=> $this->page],$user->lang))->addButtons(
                     $buttons
                 ), function (Answer $answer) use ($getApi, $api, $user) {
 

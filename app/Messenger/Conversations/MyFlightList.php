@@ -30,13 +30,13 @@ class MyFlightList extends Conversation
         $user = MessengerUser::where('user_id', "" . $this->getBot()->getUser()->getId())->first();
         $usersTracksFlights = FlightTracking::where("status", 1)
             ->where('type', 'messenger')
-            ->where('chat_id', $user->user_id)->get();
+            ->where('chat_id', $user->user_id)->orderBy('departure_date_utc','asc')->get();
         $this->page = $page;
 //        (new FlightsKeyboard())->create($usersTracksFlights,$page,$user->lang);
 
         if ($usersTracksFlights->isEmpty()) {
             $q = Lang::get('messages.emptyFlightsList', [], $user->lang);
-            $buttons[] = Button::create("Back")->value('main_menu');
+            $buttons[] = Button::create(Lang::get('messages.back',[],$user->lang))->value('main_menu');
             $this->ask(Question::create($q)->addButtons(
                 $buttons
             ), function (Answer $answer) {
@@ -62,21 +62,21 @@ class MyFlightList extends Conversation
                     $buttons[] = $button;
                 }
             }
-            $buttons[] = Button::create("Back")->value('main_menu');
-            $this->ask(Question::create('Pick another page')->addButtons(
+            $buttons[] = Button::create(Lang::get('messages.back',[],$user->lang))->value('main_menu');
+            $this->ask(Question::create(Lang::get('messages.page',['page'=> $this->page],$user->lang))->addButtons(
                 $buttons
 
-            ), function (Answer $answer) use ($usersTracksFlights, $user) {
+            ), function (Answer $answer) use ($page, $usersTracksFlights, $user) {
                 // Detect if button was clicked:
                 $messageText = explode("_", $this->bot->getMessage()->getText());
                 if ($messageText[0] == "track") {
                     $date = $messageText[1];
-                    $page = $messageText[2];
+                    $this->page = $messageText[2];
                     $flight_number = $messageText[3];
                     $status = $messageText[4];
 
                     $getApi = new GetApi();
-                    $flight = $getApi->getOneFlight($date, $flight_number, $page);
+                    $flight = $getApi->getOneFlight($date, $flight_number, $this->page);
 
 //            dd($flight);
                     $code = FlightHelper::GetStatus($flight, $user->lang)->code;
@@ -92,7 +92,7 @@ class MyFlightList extends Conversation
                             $expired_at = $flight["arrival_date"];
                             $expired_at_utc = $flight["arrival_date_utc"];
                         }
-                        (new DB())->createFlightTacking($date, $user, $flight, $page, $status, $expired_at, $expired_at_utc);
+                        (new DB())->createFlightTacking($date, $user, $flight, $this->page, $status, $expired_at, $expired_at_utc);
 
                         $from = (array)$flight["from"];
                         $to = (array)$flight["to"];
@@ -121,7 +121,7 @@ class MyFlightList extends Conversation
                         $this->myFlights($selectedValue);
 
                     } else {
-                        $this->myFlights($this->page);
+                        $this->myFlights($page);
                     }
                 }
             });

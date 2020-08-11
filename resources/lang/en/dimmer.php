@@ -13,4 +13,5 @@ return [
     'user_text'      => 'You have :count :string in your database. Click on button below to view all users.',
     'user_telegram_text'      => 'You have :count :string in Telegram',
     'user_viber_text'      => 'You have :count :string in Viber',
+    'user_messenger_text'      => 'You have :count :string in Messenger',
     ];

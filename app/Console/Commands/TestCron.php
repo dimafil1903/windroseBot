@@ -2,7 +2,13 @@
 
 namespace App\Console\Commands;
 
+use App\Messenger\keyboard\MainKeyboard;
 use App\Viber\Keyboards\MainMenu;
+use BotMan\BotMan\BotManFactory;
+use BotMan\BotMan\Cache\LaravelCache;
+use BotMan\BotMan\Exceptions\Base\BotManException;
+use BotMan\BotMan\Messages\Outgoing\Question;
+use BotMan\Drivers\Facebook\FacebookDriver;
 use Illuminate\Console\Command;
 use Paragraf\ViberBot\Client;
 use PhpTelegramBot\Laravel\PhpTelegramBotContract;
@@ -59,12 +65,21 @@ class TestCron extends Command
         Request::sendMessage($data);
 
 //        ViberUser::all();
-        $keyboard= new MainMenu();
-        $keyboard= $keyboard->getKeyboard('uk')->setType('keyboard');
-        $keyboard= $keyboard->getKeyboard();
-        $keyboard= $keyboard->setInputFieldState('hidden');
-        $users=ViberUser::where('user_id',["RnxqjHvB2FJkT3XFO9aXWw=="])->get();
-        (new Client())->broadcast('Hello',$users->toArray() ,$keyboard);
+        $config = ['facebook' => [
+            'token' => env("FACEBOOK_TOKEN"),
+            'app_secret' => env("FACEBOOK_APP_SECRET"),
+            'verification' => env("FACEBOOK_VERIFICATION"),
+        ]
+        ];
+        $botman = BotManFactory::create($config, new LaravelCache());
+        try {
+            $botman->say(Question::create("TEST")->addButtons(
+
+                (new MainKeyboard())->getKeyboard("uk")
+
+            ),"3127568233946310",FacebookDriver::class);
+        } catch (BotManException $e) {
+        }
 
     }
 

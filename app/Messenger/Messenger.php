@@ -4,6 +4,7 @@
 namespace App\Messenger;
 
 
+use App\Chat;
 use App\Messenger\Conversations\FlightsConversation;
 use App\Messenger\Conversations\LangConversation;
 use App\Messenger\Conversations\MainMenuConversation;
@@ -38,38 +39,9 @@ class Messenger
     public function handle($botman)
     {
 
-//        $user = $botman->getMessage()->getSender();
-
-//        $botman->hears('hi', function (BotMan $bot) {
-//
-//            $elements = [];
-//            for ($i = 0; $i < 10; $i++) {
-//                $elements[] = Element::create('КИЕВ(БОРИСПОЛЬ) 08:00-ШАРМ-ЭЛЬ-ШЕЙХ 21:00 ')
-//                    ->subtitle('This is the best way to start with Laravel and BotMan')
-//                    ->addButton(ElementButton::create('Отслеживать')
-//                        ->url('https://github.com/mpociot/botman-laravel-starter')
-//                    );
-//            }
-//            $bot->reply(GenericTemplate::create()
-//                ->addImageAspectRatio(GenericTemplate::RATIO_SQUARE)
-//                ->addElements($elements)
-//            );
-//
-//            $bot->reply(Question::create('Pick another page')->addButtons(
-//                [
-//                    Button::create('1')->value('1'),
-//                    Button::create('2')->value('2'),
-//                    Button::create('3')->value('3'),
-//                    Button::create('4')->value('4'),
-//                    Button::create('5')->value('5'),
-//                    Button::create('6')->value('6'),
-//                    Button::create('7')->value('7'),
-//                ]
-//            ));
-//        });
 
         $botman->hears('start', function ($bot) {
-
+            Log::debug(\GuzzleHttp\json_encode($bot->getUser()->getInfo()));
             $bot->startConversation(new StartConversation());
         });
 
@@ -102,9 +74,9 @@ class Messenger
                     if ($button) {
                         $hasChildrens = MenuItem::where('menu_id', 2)->where('parent_id', $button->value)->first();
 
-//            Ω
+
                         if ($hasChildrens) {
-                            $bot->reply(Question::create($button->key)->addButtons(
+                            $bot->reply(Question::create($this->getTitle($button->key, $user->lang))->addButtons(
                                 (new MainKeyboard())->getSub($button->value, $user->lang)
                             ));
                         }
@@ -228,6 +200,16 @@ class Messenger
         });
 // Start listening
         $botman->listen();
+    }
+
+    public function getTitle($button, $lang)
+    {
+        $item = \App\MenuItem::where('id', telegram_config_no_translate($button))->
+        first();
+
+        $item = $item->translate($lang);
+
+        return $item['title'];
     }
 
 }

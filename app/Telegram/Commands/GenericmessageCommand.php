@@ -94,28 +94,26 @@ class GenericmessageCommand extends SystemCommand
         $message = $this->getMessage();
         $chat_id = $message->getChat()->id;
         $text = $message->getText();
-        $from=$message->getFrom();
+        $from = $message->getFrom();
 
-      $contact=  $message->getContact();
+        $contact = $message->getContact();
         $chat = Chat::where('id', $chat_id)->first();
-      if ($contact){
-          if ($contact->getUserId()==$from->getId()) {
-            $tgUser  =TelegramUser::find($contact->getUserId());
-            $tgUser->phone=$contact->getPhoneNumber();
-            $tgUser->save();
-              $keyboard=( new MainKeyboard())->getMainKeyboard($chat_id);
-              $this->replyToUser(Lang::get('messages.successPhoneNumber',['phone'=>$contact->getPhoneNumber()],$chat->lang));
+        if ($contact) {
+            if ($contact->getUserId() == $from->getId()) {
+                $tgUser = TelegramUser::find($contact->getUserId());
+                $tgUser->phone = $contact->getPhoneNumber();
+                $tgUser->save();
+                $keyboard = (new MainKeyboard())->getMainKeyboard($chat_id);
+                $this->replyToUser(Lang::get('messages.successPhoneNumber', ['phone' => $contact->getPhoneNumber()], $chat->lang));
 
-              $this->replyToUser(Lang::get("messages.startMessage", ["name" => $message->getFrom()->getFirstName(), "nameBot" => $message->getBotUsername()], "$chat->lang"),["reply_markup"=>$keyboard]);
-              }else{
-              $this->replyToUser("Sorry BUT This is not your contact");
-          }
+                $this->replyToUser(Lang::get("messages.startMessage", ["name" => $message->getFrom()->getFirstName(), "nameBot" => $message->getBotUsername()], "$chat->lang"), ["reply_markup" => $keyboard]);
+            } else {
+                $this->replyToUser("Sorry BUT This is not your contact");
+            }
 //          dd($contact->getPhoneNumber());
-      }
+        }
         $this->chat_id = $chat_id;
         $this->text = $text;
-
-
 
 
         /**
@@ -172,7 +170,7 @@ class GenericmessageCommand extends SystemCommand
          * НАЖАТИЕ КНОПКИ МОЙ СПИСОК РЕЙСОВ
          */
         if ($text == $this->getTitle('buttons.myFlightList')) {
-            $usersTracksFlights = FlightTracking::where("status", 1)->where('chat_id', $chat_id)->where('person_id', $message->getFrom()->getId())->get();
+            $usersTracksFlights = FlightTracking::where("status", 1)->where('chat_id', $chat_id)->where('person_id', $message->getFrom()->getId())->orderBy('departure_date_utc', 'asc')->get();
             $this->closeConvers($message, $chat_id);
 
             if ($usersTracksFlights->isEmpty()) {
@@ -221,16 +219,14 @@ class GenericmessageCommand extends SystemCommand
 
             $date = $date->format($format);
 //            dd($date);
-        }
-        elseif ($text == $this->getTitle('buttons.tomorrow')) {
+        } elseif ($text == $this->getTitle('buttons.tomorrow')) {
             $this->closeConvers($message, $chat_id);
             $date = new DateTime('tomorrow', new DateTimeZone('Europe/Kiev'));
 
             $date = $date->format($format);
 
 //            dd($date);
-        }
-        elseif ($text == $this->getTitle('buttons.yesterday')) {
+        } elseif ($text == $this->getTitle('buttons.yesterday')) {
             $this->closeConvers($message, $chat_id);
 //            $d = strtotime("yesterday");
             $date = new DateTime('yesterday', new DateTimeZone('Europe/Kiev'));
@@ -238,8 +234,7 @@ class GenericmessageCommand extends SystemCommand
             $date = $date->format($format);
 //            $date = date($format, $d);
 //            dd($date);
-        }
-        elseif ($text == $this->getTitle('buttons.your_date')) {
+        } elseif ($text == $this->getTitle('buttons.your_date')) {
             $this->closeConvers($message, $chat_id);
             $convers = new Conversation($message->getFrom()->getId(), $chat_id, "your_date");
 
@@ -259,7 +254,7 @@ class GenericmessageCommand extends SystemCommand
             $currentTime1 = new DateTime('NOW', new DateTimeZone('Europe/Kiev'));
             $twoDay = $currentTime1->add(new DateInterval("P2D"));
             $data['text'] = Lang::get("messages.inputYourDate", [], "$chat->lang") . "\n" .
-                Lang::get("messages.example", ["date"=>$twoDay->format("d.m")], "$chat->lang");
+                Lang::get("messages.example", ["date" => $twoDay->format("d.m")], "$chat->lang");
 
 
             Request::sendMessage($data);
@@ -345,7 +340,7 @@ class GenericmessageCommand extends SystemCommand
          * Если по нажатию на колбек кнопку передается дата то идем сюда
          */
         if ($date) {
-            $getApi=new GetApi();
+            $getApi = new GetApi();
             $api = $getApi->getFlightsByDate($date);
 //            dd($date);
 //            dd($api);
@@ -365,7 +360,7 @@ class GenericmessageCommand extends SystemCommand
             if ($api) {
                 $keyboard = new CreateInlineKeyboard($chat_id);
                 $keyboard = $keyboard->createFlightsList($api);
-                $data["text"] = ConvertDate::ConvertToWordMonth($date, $chat->lang) . "\n" . Lang::get("messages.list", [], "$chat->lang") . " 1 " . Lang::get("messages.of", [], "$chat->lang") ." ". $getApi->getLastPage();
+                $data["text"] = ConvertDate::ConvertToWordMonth($date, $chat->lang) . "\n" . Lang::get("messages.list", [], "$chat->lang") . " 1 " . Lang::get("messages.of", [], "$chat->lang") . " " . $getApi->getLastPage();
                 $data["reply_markup"] = $keyboard;
                 return Request::sendMessage($data);
             } else {

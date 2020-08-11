@@ -73,5 +73,7 @@ Select menu item 👇
     "shareContact"=>"Share contact",
     "successPhoneNumber"=>"Phone number (:phone) is set",
     "moreDetails"=>"More Details",
+    "mainMenu"=>"To the main menu",
+    "fallbackMessage"=>"Oops, didn't quite catch that. Please stick to the buttons below"
 
 ];

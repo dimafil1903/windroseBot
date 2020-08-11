@@ -4,10 +4,16 @@ namespace App\Console\Commands;
 
 use App\Chat;
 use App\FlightTracking;
+use App\Messenger\keyboard\MainKeyboard;
+use App\MessengerUser;
 use App\Telegram\Helpers\GetApi;
 use App\User;
 use App\Viber\Keyboards\MainMenu;
 use App\ViberUser;
+use BotMan\BotMan\BotManFactory;
+use BotMan\BotMan\Cache\LaravelCache;
+use BotMan\BotMan\Messages\Outgoing\Question;
+use BotMan\Drivers\Facebook\FacebookDriver;
 use DateTime;
 use DateTimeZone;
 use Illuminate\Console\Command;
@@ -53,6 +59,7 @@ class SendAndDeleteArrived extends Command
      * @param PhpTelegramBotContract $telegram_bot
      * @return void
      * @throws TelegramException
+     * @throws \BotMan\BotMan\Exceptions\Base\BotManException
      */
     public function handle(PhpTelegramBotContract $telegram_bot)
     {
@@ -60,7 +67,6 @@ class SendAndDeleteArrived extends Command
         $tracksToDelete = FlightTracking::
 //            ->where("delay","0")
         where("expired_at_utc", "<=", $currentTime->format("Y-m-d H:i:s"))
-
             ->get();
 //        var_dump($tracksToDelete);
         $this->info($currentTime->format("Y-m-d H:i:s"));
@@ -69,39 +75,56 @@ class SendAndDeleteArrived extends Command
 //                $flight = GetApi::getOneFlight($item->date, $item->flight_number, $item->page);
 
 //                var_dump($item->from);
-                $from=(array) json_decode($item->fromJSON);
+                $from = (array)json_decode($item->fromJSON);
 //                var_dump($from);
-                $to=(array) json_decode($item->toJSON);
+                $to = (array)json_decode($item->toJSON);
 
-                if ($item->type=="viber"){
-                    $chat=ViberUser::where('user_id',"$item->chat_id")->first();
-                }else{
-                    $chat=Chat::find($item->chat_id);
+                if ($item->type == "viber") {
+                    $chat = ViberUser::where('user_id', "$item->chat_id")->first();
+                } elseif ($item->type == 'messenger') {
+                    $chat = MessengerUser::where('user_id', $item->chat_id)->first();
+                } else {
+                    $chat = Chat::find($item->chat_id);
                 }
-                $lang=$chat->lang;
-                $langApi=$lang;
-                if ($lang=="uk"){
-                    $langApi="ua";
+                $lang = $chat->lang;
+                $langApi = $lang;
+                if ($lang == "uk") {
+                    $langApi = "ua";
                 }
                 if ($item->status == 1) {
-                    $text=" " . Lang::get("messages.messageAboutArrived", ["flight" => "$item->carrier-$item->flight_number " . $from["$langApi"] . "-" . $to["$langApi"], "time" => "$item->expired_at"], "$chat->lang");
-                    if ($item->type=="telegram") {
+                    $text = " " . Lang::get("messages.messageAboutArrived", ["flight" => "$item->carrier-$item->flight_number " . $from["$langApi"] . "-" . $to["$langApi"], "time" => "$item->expired_at"], "$chat->lang");
+                    if ($item->type == "telegram") {
 
 
                         $this->info("$item->date");
                         $data = [
                             "chat_id" => $item->chat_id,
-                            "text" =>   $text ];
+                            "text" => $text];
                         Request::sendMessage($data);
-                    }elseif ($item->type=="viber"){
+                    } elseif ($item->type == "viber") {
 
-                        $keyboard= new MainMenu();
-                        $keyboard= $keyboard->getKeyboard($lang);
-                        $keyboard= $keyboard->getKeyboard();
-                        $users=ViberUser::where('user_id',"$item->chat_id")->get();
-                        (new Client())->broadcast($text, $users->toArray(),$keyboard);
+                        $keyboard = new MainMenu();
+                        $keyboard = $keyboard->getKeyboard($lang);
+                        $keyboard = $keyboard->getKeyboard();
+                        $users = ViberUser::where('user_id', "$item->chat_id")->get();
+                        (new Client())->broadcast($text, $users->toArray(), $keyboard);
 
-                   }
+                    } elseif ($item->type == "messenger") {
+                        $config = ['facebook' => [
+                            'token' => env("FACEBOOK_TOKEN"),
+                            'app_secret' => env("FACEBOOK_APP_SECRET"),
+                            'verification' => env("FACEBOOK_VERIFICATION"),
+                        ]
+                        ];
+
+
+                        $botman = BotManFactory::create($config, new LaravelCache());
+                        $botman->say(Question::create($text)->addButtons(
+
+                            (new MainKeyboard())->getKeyboard($chat->lang)
+
+                        ), $item->chat_id, FacebookDriver::class);
+                    }
                 }
                 FlightTracking::destroy($item->id);
 

@@ -31,9 +31,11 @@ class DB
     public function insertUser($user)
     {
 
+
       return  MessengerUser::updateOrCreate([
             'user_id' => $user->getId()
         ], [
+            'profile_pic'=>$user->getInfo()['profile_pic'],
             'first_name' => $user->getFirstName(),
             'last_name' => $user->getLastName(),
         ]);

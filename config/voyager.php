@@ -151,6 +151,7 @@ return [
 //            'TCG\\Voyager\\Widgets\\PageDimmer',
             'App\\Dimmers\\TelegramUserDimmer',
             'App\\Dimmers\\ViberUserDimmer',
+            'App\\Dimmers\\MessengerUsersDimmer',
 //            'App\\Dimmers\\TelegramMessagesDimmer'
         ],
 

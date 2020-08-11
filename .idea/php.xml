@@ -132,6 +132,7 @@
       <path value="$PROJECT_DIR$/vendor/botman/botman" />
       <path value="$PROJECT_DIR$/vendor/botman/driver-telegram" />
       <path value="$PROJECT_DIR$/vendor/botman/driver-facebook" />
+      <path value="$PROJECT_DIR$/vendor/botman/driver-web" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="7.1" />

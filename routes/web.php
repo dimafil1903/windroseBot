@@ -24,6 +24,7 @@ Route::any('hook/fb', 'FbMessengerController@hook');
 
 
 Route::get('flight', 'FlightMorePageController@index');
+Route::any('botmantest', 'BotmanController@index');
 
 Route::get('check', 'SendMessage@check');
 Route::post("hook", "ViberBotController@hook");

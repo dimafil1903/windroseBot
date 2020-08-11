@@ -90,7 +90,7 @@ class MyListKeyboard
             $buttons[] = (new Button("reply",
                 "flight_" . $datum["flight_number"] . "_$date" . "_$current_page" . "_$fieldStatus"."_".$last_page."_myList",
                 "<font color='#FFFFFF'>" .
-                $datum["carrier"] . "-" . $datum["flight_number"] . "\n" .
+                $datum["carrier"] . "-" . $datum["flight_number"] ."  " .$date."\n" .
                 $from->$lang . " " . $time . " - " .
 
                 $to->$lang . " " .
@@ -136,6 +136,7 @@ class MyListKeyboard
 
         $usersTracksFlights = FlightTracking::where("status", 1)
             ->where('type','viber')
+            ->orderBy('departure_date_utc','asc')
             ->where('chat_id', $this->chat_id)->get();
 
        $buttons= $this->getButtons($usersTracksFlights,$chat_id,$current_page);

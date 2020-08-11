@@ -199,7 +199,9 @@ class CallbackqueryCommand extends SystemCommand
         if ($callback_data == "backToMyFlightList") {
             $usersTracksFlights = FlightTracking::
             where("status", 1)
-                ->where('chat_id', $chat_id)->get();
+            ->where('type', 'telegram')
+            ->where('chat_id', $chat_id)
+            ->orderBy('departure_date_utc', 'asc')->get();
             if ($usersTracksFlights->isEmpty()) {
                 $data = [
                     "chat_id" => $chat_id,
@@ -329,7 +331,7 @@ class CallbackqueryCommand extends SystemCommand
                 $lang_menu->set($lang, $callback_message_id);
             }
             $chat = Chat::find($chat_id);
-            $userTg=TelegramUser::find($chat_id);
+            $userTg = TelegramUser::find($chat_id);
             if (!$userTg->phone) {
 //                    $keyboard = $keyboard->getMainKeyboard($chat_id);
                 $keyboard = (new ContactsKeyboard())->getKeyboard($chat->lang);
@@ -340,7 +342,7 @@ class CallbackqueryCommand extends SystemCommand
                 ];
 
 
-              return  Request::sendMessage($data);
+                return Request::sendMessage($data);
             }
             if ($onStart == "1") {
 
@@ -349,7 +351,7 @@ class CallbackqueryCommand extends SystemCommand
                     'text' => Lang::get("messages.startMessage", ["name" => $callback_query->getFrom()->getFirstName(), "nameBot" => $callback_query->getBotUsername()], "$chat->lang"),
 
                 ];
-              return  Request::sendMessage($data);
+                return Request::sendMessage($data);
             }
 
         }

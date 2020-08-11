@@ -80,8 +80,9 @@ class flightsKeyboard
 
                 $text = "";
 //        dd($flight);
-           $text .= "\n👀" . Lang::get("messages.status", [], "$lang") . (FlightHelper::GetStatus($datum, "$lang"))->message;
+                $text .= "📅" . Lang::get("messages.departure_date", [], "$lang") . date("d.m.Y", strtotime($datum['departure_date']));
 
+                $text .= "\n👀" . Lang::get("messages.status", [], "$lang") . (FlightHelper::GetStatus($datum, "$lang"))->message;
 
 
                 $el = Element::create(
@@ -101,8 +102,8 @@ class flightsKeyboard
                     );
 
                 }
-                $el->addButton(ElementButton::create(Lang::get('messages.moreDetails',[],$lang))
-                    ->url("https://windrosebot.dimafilipenko.website/flight?date=$date&number=".$datum['flight_number']."&lang=".$lang)
+                $el->addButton(ElementButton::create(Lang::get('messages.moreDetails', [], $lang))
+                    ->url("https://windrosebot.dimafilipenko.website/flight?date=$date&number=" . $datum['flight_number'] . "&lang=" . $lang)
                     ->heightRatio(ElementButton::RATIO_TALL)
                     ->enableExtensions());
                 $elements[] = $el;
@@ -120,7 +121,7 @@ class flightsKeyboard
 
             foreach ($flights as $datum) {
                 $flightInDB = FlightTracking::
-                    where("chat_id", $user->user_id)
+                where("chat_id", $user->user_id)
                     ->where("flight_number", $datum["flight_number"])
                     ->first();
                 $lang = $user->lang;
@@ -144,7 +145,8 @@ class flightsKeyboard
 
                 $text = "";
 //        dd($flight);
-           $text .= "\n👀" . Lang::get("messages.status", [], "$lang") . (FlightHelper::GetStatus($datum, "$lang"))->message;
+             
+                $text .= "   👀" . Lang::get("messages.status", [], "$lang") . (FlightHelper::GetStatus($datum, "$lang"))->message;
 //        dd((FlightHelper::GetStatus($flight, "$lang"))->message);
 
                 $time = new DateTime($datum["departure_date"]);
@@ -169,8 +171,8 @@ class flightsKeyboard
                     );
 
                 }
-                $el->addButton(ElementButton::create(Lang::get('messages.moreDetails',[],$lang))
-                    ->url("https://windrosebot.dimafilipenko.website/flight?date=$date&number=".$datum['flight_number']."&lang=".$lang)
+                $el->addButton(ElementButton::create(Lang::get('messages.moreDetails', [], $lang))
+                    ->url("https://windrosebot.dimafilipenko.website/flight?date=$date&number=" . $datum['flight_number'] . "&lang=" . $lang)
                     ->heightRatio(ElementButton::RATIO_TALL)
                     ->enableExtensions());
                 $elements[] = $el;

@@ -9,6 +9,7 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/botman/botman" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/botman/driver-facebook" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/botman/driver-telegram" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/botman/driver-web" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/evenement/evenement" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/mpociot/pipeline" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/paragraf-lex/viber-bot" />

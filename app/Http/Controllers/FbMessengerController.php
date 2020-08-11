@@ -23,9 +23,11 @@ class FbMessengerController extends Controller
             'verification' => env("FACEBOOK_VERIFICATION"),
         ]
         ];
-        Log::debug(\GuzzleHttp\json_encode(file_get_contents('php://input')));
+
         DriverManager::loadDriver(FacebookDriver::class);
         $botman = BotManFactory::create($config, new LaravelCache());
+
+
         (new Messenger())->handle($botman);
 
     }
