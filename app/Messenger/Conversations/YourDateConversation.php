@@ -6,6 +6,7 @@ namespace App\Messenger\Conversations;
 
 use App\MessengerUser;
 use App\Telegram\Helpers\ConvertDate;
+use App\Telegram\Helpers\GetApi;
 use BotMan\BotMan\Messages\Conversations\Conversation;
 use BotMan\BotMan\Messages\Incoming\Answer;
 use BotMan\BotMan\Messages\Incoming\IncomingMessage;
@@ -33,7 +34,7 @@ class YourDateConversation extends Conversation
             ->fallback('ОЙ')
             ->callbackId('cancel')
             ->addButtons([
-                Button::create("cancel")->value('buttons.schedule'),
+                Button::create(Lang::get('messages.cancel',[],$user->lang))->value('buttons.schedule'),
 
             ]);
 
@@ -67,7 +68,14 @@ class YourDateConversation extends Conversation
                             $dt->add(new DateInterval("P1Y"));
                         }
                     }
+
                     $date = $dt->format("Y-m-d");
+                  $data=  (new GetApi())->getFlightsByDate($date);
+                  if (!$data){
+                      $errorMessage = Lang::get("messages.wrongDateInput", [], $user->lang);
+                      $this->say($errorMessage);
+                      $this->repeat();
+                  }
                     $answer = Lang::get('messages.FlightListsOn', ['date' => ConvertDate::ConvertToWordMonth($date, $user->lang)], $user->lang);
 
                     $this->getBot()->userStorage()->save([

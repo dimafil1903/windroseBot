@@ -71,4 +71,5 @@ return [
     "shareContactMessage"=>"Гаразд, поділіться з нами своїм номером телефону",
     "shareContact"=>"Поділитися номером",
     "successPhoneNumber"=>"Номер телефону (:phone) встановлено",
+    "moreDetails"=>"Детальніше",
 ];

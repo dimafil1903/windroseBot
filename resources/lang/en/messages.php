@@ -72,4 +72,6 @@ Select menu item 👇
     "shareContactMessage"=>"Okay, share your phone number with us",
     "shareContact"=>"Share contact",
     "successPhoneNumber"=>"Phone number (:phone) is set",
+    "moreDetails"=>"More Details",
+
 ];

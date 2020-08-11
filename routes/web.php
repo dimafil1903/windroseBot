@@ -23,6 +23,8 @@ Route::get('info', 'TelegramController@info');
 Route::any('hook/fb', 'FbMessengerController@hook');
 
 
+Route::get('flight', 'FlightMorePageController@index');
+
 Route::get('check', 'SendMessage@check');
 Route::post("hook", "ViberBotController@hook");
 Route::get('setviber', 'ViberBotController@set');

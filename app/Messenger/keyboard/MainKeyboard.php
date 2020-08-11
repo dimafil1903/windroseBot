@@ -6,6 +6,7 @@ namespace App\Messenger\keyboard;
 
 use App\TelegramConfig;
 use BotMan\BotMan\Messages\Outgoing\Actions\Button;
+use Illuminate\Support\Facades\Lang;
 use TCG\Voyager\Models\MenuItem;
 
 class MainKeyboard
@@ -52,7 +53,7 @@ class MainKeyboard
                 $buttons[] = Button::create($menu->title)->value($key->key);
             }
         }
-        $buttons[] = Button::create("Back")->value('main_menu');
+        $buttons[] = Button::create(Lang::get('messages.back',[],$lang))->value('main_menu');
         return $buttons;
     }
 }

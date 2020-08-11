@@ -51,8 +51,7 @@ class flightsKeyboard
             $flights = $data->forPage($current_page, 10);
             $elements = [];
             foreach ($flights as $datum) {
-                $flightInDB = FlightTracking::where('page', $current_page)
-                    ->where("chat_id", $user->user_id)
+                $flightInDB = FlightTracking:: where("chat_id", $user->user_id)
                     ->where("flight_number", $datum["flight_number"])
                     ->first();
                 $lang = $user->lang;
@@ -102,8 +101,8 @@ class flightsKeyboard
                     );
 
                 }
-                $el->addButton(ElementButton::create('подробней')
-                    ->url('https://windrosebot.dimafilipenko.website')
+                $el->addButton(ElementButton::create(Lang::get('messages.moreDetails',[],$lang))
+                    ->url("https://windrosebot.dimafilipenko.website/flight?date=$date&number=".$datum['flight_number']."&lang=".$lang)
                     ->heightRatio(ElementButton::RATIO_TALL)
                     ->enableExtensions());
                 $elements[] = $el;
@@ -120,8 +119,8 @@ class flightsKeyboard
 
 
             foreach ($flights as $datum) {
-                $flightInDB = FlightTracking::where('page', $current_page)
-                    ->where("chat_id", $user->user_id)
+                $flightInDB = FlightTracking::
+                    where("chat_id", $user->user_id)
                     ->where("flight_number", $datum["flight_number"])
                     ->first();
                 $lang = $user->lang;
@@ -170,8 +169,8 @@ class flightsKeyboard
                     );
 
                 }
-                $el->addButton(ElementButton::create('подробней')
-                    ->url('https://windrosebot.dimafilipenko.website')
+                $el->addButton(ElementButton::create(Lang::get('messages.moreDetails',[],$lang))
+                    ->url("https://windrosebot.dimafilipenko.website/flight?date=$date&number=".$datum['flight_number']."&lang=".$lang)
                     ->heightRatio(ElementButton::RATIO_TALL)
                     ->enableExtensions());
                 $elements[] = $el;
